@@ -1,5 +1,3 @@
-
-
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
@@ -23,6 +21,7 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const productModel = mongoose.model("product", productSchema);
+// ✅ Prevent OverwriteModelError
+const productModel = mongoose.models.product || mongoose.model("product", productSchema);
 
 export default productModel;

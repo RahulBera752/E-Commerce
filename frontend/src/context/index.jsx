@@ -1,31 +1,34 @@
-// src/context/index.jsx
 import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { SummaryApi } from "../common";
-import { setCartCount } from "../store/cartSlice"; // ✅ Import action
+import { setCartCount } from "../store/cartSlice"; // ✅ Redux action
 
 const Context = createContext();
 
 const ContextProvider = ({ children }) => {
   const [userAddToCart, setUserAddToCart] = useState([]);
   const [cartProductCount, setCartProductCount] = useState(0);
+  const dispatch = useDispatch(); // ✅ Redux dispatcher
 
-  const dispatch = useDispatch(); // ✅ Use Redux dispatcher
-
+  // ✅ Updated to use correct API: view-cart-product
   const fetchUserAddToCart = async () => {
     try {
-      const response = await fetch(SummaryApi.addToCartProductCount.url, {
-        method: SummaryApi.addToCartProductCount.method,
+      const response = await fetch(SummaryApi.addToCartViewProduct.url, {
+        method: SummaryApi.addToCartViewProduct.method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        const count = data.data?.count || 0;
-        setCartProductCount(count);
-        dispatch(setCartCount(count)); // ✅ Update Redux
+      if (data.success && Array.isArray(data.data)) {
+        setUserAddToCart(data.data);
+        setCartProductCount(data.data.length);
+        dispatch(setCartCount(data.data.length));
+      } else {
+        setUserAddToCart([]);
+        setCartProductCount(0);
+        dispatch(setCartCount(0));
       }
     } catch (err) {
       console.error("fetchUserAddToCart failed:", err);

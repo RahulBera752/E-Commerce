@@ -6,10 +6,13 @@ import SignUp from "../pages/SignUp";
 import AdminPanel from "../pages/AdminPanel";
 import AllUsers from "../pages/AllUsers";
 import AllProducts from "../pages/AllProducts";
+import AllOrders from "../pages/AllOrders"; // ✅ added
 import CategoryProduct from "../pages/catagoryProduct";
 import ProductDetails from "../pages/ProductDetails";
 import Cart from "../pages/Cart";
 import SearchProduct from "../pages/searchProduct";
+import Order from "../pages/OrderPage";
+import OrderSuccess from "../pages/OrderSuccess";
 
 const router = createBrowserRouter([
   {
@@ -25,24 +28,15 @@ const router = createBrowserRouter([
         children: [
           { path: "all-users", element: <AllUsers /> },
           { path: "all-products", element: <AllProducts /> },
+          { path: "all-orders", element: <AllOrders /> }, // ✅ added
         ],
       },
-      {
-        path: "product-category/:category",
-        element: <CategoryProduct />,
-      },
-      {
-        path: "product/:id",
-        element: <ProductDetails />,
-      },
-           {
-        path: "search",
-        element: <SearchProduct/>
-           },
-      {
-        path: "cart",
-        element: <Cart />
-      },
+      { path: "product-category/:category", element: <CategoryProduct /> },
+      { path: "product/:id", element: <ProductDetails /> },
+      { path: "search", element: <SearchProduct /> },
+      { path: "cart", element: <Cart /> },
+      { path: "order", element: <Order /> },
+      { path: "order-success", element: <OrderSuccess /> },
     ],
   },
 ]);

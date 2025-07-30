@@ -1,3 +1,5 @@
+// src/common/index.js
+
 const BASE_URL = "http://localhost:8080";
 
 export const SummaryApi = {
@@ -23,9 +25,9 @@ export const SummaryApi = {
     method: "GET",
   },
   change_user_role: {
-  url: `${BASE_URL}/api/user/change-role`,
-  method: "PATCH",
-},
+    url: `${BASE_URL}/api/user/change-role`,
+    method: "PATCH",
+  },
 
   // ✅ Product APIs
   all_products: {
@@ -36,10 +38,10 @@ export const SummaryApi = {
     url: `${BASE_URL}/api/product/add-product`,
     method: "POST",
   },
-updateProduct: {
-  url: `${BASE_URL}/api/product/update-product`,
-  method: "PUT",
-},
+  updateProduct: (id) => ({
+    url: `${BASE_URL}/api/product/update-product/${id}`,
+    method: "PUT",
+  }),
   categoryWiseProduct: {
     url: `${BASE_URL}/api/product/get-categoryProduct`,
     method: "GET",
@@ -76,6 +78,16 @@ updateProduct: {
   },
   searchProduct: {
     url: `${BASE_URL}/api/product/search`,
+    method: "GET",
+  },
+
+  // ✅ Order APIs
+  order: {
+    url: `${BASE_URL}/api/user/place-order`,
+    method: "POST",
+  },
+  allOrders: {
+    url: `${BASE_URL}/api/user/all-orders`, // ✅ ADDED THIS
     method: "GET",
   },
 };

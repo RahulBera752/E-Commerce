@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
@@ -14,21 +15,24 @@ const App = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const fetchUserDetails = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      
-      if (!token) {
-        dispatch(setUserDetails(null));
-        return;
-      }
+  // ✅ Fetch user and cart on refresh
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchUserDetails(token);
+      fetchCartCount(token);
+    }
+  }, []);
 
+  const fetchUserDetails = async (token) => {
+    try {
       const response = await fetch(SummaryApi.current_user.url, {
         method: SummaryApi.current_user.method,
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -46,21 +50,15 @@ const App = () => {
     }
   };
 
-  const fetchCartCount = async () => {
+  const fetchCartCount = async (token) => {
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        dispatch(setCartCount(0));
-        return;
-      }
-
       const response = await fetch(SummaryApi.addToCartProductCount.url, {
         method: SummaryApi.addToCartProductCount.method,
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -76,14 +74,9 @@ const App = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUserDetails();
-    fetchCartCount();
-  }, []);
-
   return (
     <>
-      <ToastContainer 
+      <ToastContainer
         position="top-center"
         autoClose={3000}
         hideProgressBar={false}
@@ -106,3 +99,4 @@ const App = () => {
 };
 
 export default App;
+

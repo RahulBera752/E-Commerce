@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { SummaryApi } from "../common";
 import { toast } from "react-toastify";
 import displayINRCurrency from "../helpers/displayCurrency";
@@ -7,6 +8,7 @@ import { Context } from "../context";
 const Cart = () => {
   const [data, setData] = useState([]);
   const context = useContext(Context);
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -199,7 +201,11 @@ const Cart = () => {
             {displayINRCurrency(grandTotal)}
           </span>
         </p>
-        <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+
+        <button
+          onClick={() => navigate("/order")}
+          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+        >
           Payment
         </button>
       </div>

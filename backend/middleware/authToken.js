@@ -1,13 +1,12 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-dotenv.config(); // ✅ Load environment variables like JWT_SECRET
+dotenv.config(); // Load environment variables (e.g., JWT_SECRET)
 
 const authToken = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    const token = req.cookies.token; // Get token from cookie
 
-    // 🔐 Check if token is present
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -15,15 +14,15 @@ const authToken = async (req, res, next) => {
       });
     }
 
-    // 🧾 Verify token
+    // Verify JWT token
     const decode = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 👤 Attach user ID to request object
+    // Attach user ID to the request for use in protected routes
     req.userId = decode.id;
 
-    next(); // ✅ Proceed to next middleware/controller
+    next(); // Continue to the next middleware or route
   } catch (err) {
-    console.error("authToken error:", err); // 🐛 Debug if token fails
+    console.error("authToken error:", err.message || err);
     res.status(401).json({
       success: false,
       message: "Unauthorized: Invalid or expired token",
