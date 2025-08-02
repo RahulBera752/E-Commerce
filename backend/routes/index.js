@@ -10,9 +10,6 @@ import placeOrderController from "../controller/user/placeOrder.js";
 import viewUserOrders from "../controller/user/viewUserOrders.js";
 import getallOrdersController from "../controller/user/getAllOrdersController.js";
 
-
-
-
 // Product Controllers
 import addProduct from "../controller/product/addProduct.js";
 import getCategoryProduct from "../controller/product/getCategoryProductOne.js";
@@ -28,9 +25,8 @@ import countAddToCartProduct from "../controller/user/countAddToCartproduct.js";
 import deleteCartProduct from "../controller/user/deleteCartProduct.js";
 import updateAddToCartProduct from "../controller/user/updateAddToCARTProduct.js";
 
-
-
-
+// Razorpay Payment Controller
+import { razorpayOrderController } from "../controller/payment/razorpayOrderController.js";
 
 const router = express.Router();
 
@@ -42,6 +38,7 @@ router.get("/userLogout", authToken, userLogoutController);
 router.get("/all-users", authToken, getAllUsersController);
 router.patch("/change-role", authToken, changeUserRole);
 router.get("/all-orders", authToken, getallOrdersController);
+
 // Product Routes
 router.get("/get-categoryProduct", getCategoryProduct);
 router.post("/add-product", authToken, addProduct);
@@ -50,16 +47,18 @@ router.put("/update-product/:id", authToken, updateProduct);
 router.get("/product/get-categoryProduct", getCategoryWiseProduct);
 router.get("/search", searchProduct);
 
-
-router.post("/place-order", authToken, placeOrderController);
-
-router.get("/my-orders", authToken, viewUserOrders);
 // Cart Routes
 router.post("/addtocart", authToken, addToCart);
 router.get("/countAddToCartProduct", authToken, countAddToCartProduct);
 router.get("/view-cart-product", authToken, addToCartViewProduct);
 router.patch("/update-cart-product", authToken, updateAddToCartProduct);
 router.delete("/delete-cart-product", authToken, deleteCartProduct);
-router.post("/place-order", authToken, placeOrderController);
-export default router;
 
+// Order Routes
+router.post("/place-order", authToken, placeOrderController);
+router.get("/my-orders", authToken, viewUserOrders);
+
+// Razorpay Route
+router.post("/create-order", authToken, razorpayOrderController);
+
+export default router;

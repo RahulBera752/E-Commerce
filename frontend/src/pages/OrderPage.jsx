@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { SummaryApi } from "../common/index";
+import { SummaryApi } from "../common";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -24,10 +24,9 @@ const Order = () => {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
       const data = await response.json();
       if (data.success) {
         setCartItems(data.data || []);
@@ -104,32 +103,98 @@ const Order = () => {
         phone: phone.trim(),
         address: `${address.trim()}, Landmark: ${landmark.trim()}, PIN: ${pinCode.trim()}`,
         items: orderItems,
-        paymentMethod,
+        paymentMode: paymentMethod,
         total,
       };
 
-      const response = await fetch(SummaryApi.order.url, {
-        method: SummaryApi.order.method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || `Order failed (${response.status})`);
+      if (paymentMethod === "COD") {
+        await placeFinalOrder(payload);
+      } else {
+        await handleOnlinePayment(payload);
       }
-
-      toast.success(`Order #${result.orderId} placed successfully!`);
-      navigate("/order-success", { state: { orderId: result.orderId } });
     } catch (error) {
-      toast.error(` ${error.message}`);
+      toast.error(error.message || "Order failed");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const placeFinalOrder = async (orderPayload) => {
+    const response = await fetch(SummaryApi.order.url, {
+      method: SummaryApi.order.method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(orderPayload),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || `Order failed (${response.status})`);
+    }
+
+    toast.success(`Order #${result.orderId} placed successfully!`);
+    navigate("/order-success", { state: { orderId: result.orderId } });
+  };
+
+  const handleOnlinePayment = async (orderPayload) => {
+    const loadRazorpayScript = () => {
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+    };
+
+    const res = await loadRazorpayScript();
+    if (!res) throw new Error("Failed to load Razorpay SDK");
+
+    const orderRes = await fetch("http://localhost:8080/api/payment/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: orderPayload.total }), // ✅ fixed: no * 100 here
+    });
+
+    const data = await orderRes.json();
+    if (!data.success) throw new Error("Failed to create Razorpay order");
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: data.order.amount,
+      currency: "INR",
+      name: "RB Store",
+      description: "Order Payment",
+      order_id: data.order.id,
+      handler: async function (response) {
+        const verifyRes = await fetch("http://localhost:8080/api/payment/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          await placeFinalOrder({ ...orderPayload, paymentMode: "ONLINE" });
+        } else {
+          throw new Error("Payment verification failed");
+        }
+      },
+      prefill: {
+        name: user.name,
+        email: user.email,
+        contact: phone,
+      },
+      theme: {
+        color: "#0d6efd",
+      },
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
   };
 
   return (
@@ -155,6 +220,9 @@ const Order = () => {
               onChange={(e) => setPhone(e.target.value)}
               className={`w-full border rounded px-3 py-2 ${validationErrors.phone ? "border-red-500" : ""}`}
             />
+            {validationErrors.phone && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-medium">Delivery Address *</label>
@@ -165,6 +233,9 @@ const Order = () => {
               onChange={(e) => setAddress(e.target.value)}
               className={`w-full border rounded px-3 py-2 ${validationErrors.address ? "border-red-500" : ""}`}
             />
+            {validationErrors.address && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-medium">Pin Code *</label>
@@ -175,6 +246,9 @@ const Order = () => {
               onChange={(e) => setPinCode(e.target.value)}
               className={`w-full border rounded px-3 py-2 ${validationErrors.pinCode ? "border-red-500" : ""}`}
             />
+            {validationErrors.pinCode && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.pinCode}</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-medium">Landmark</label>
@@ -193,7 +267,9 @@ const Order = () => {
           <ul className="divide-y border rounded mb-4">
             {cartItems.map((item) => (
               <li key={item.productId?._id} className="p-3 flex justify-between">
-                <span>{item.productId?.productName} x {item.quantity}</span>
+                <span>
+                  {item.productId?.productName} x {item.quantity}
+                </span>
                 <span>₹{(item.productId?.sellingPrice * item.quantity).toFixed(2)}</span>
               </li>
             ))}
@@ -213,6 +289,10 @@ const Order = () => {
               <option value="ONLINE">Online Payment</option>
             </select>
           </div>
+
+          {validationErrors.cart && (
+            <p className="text-red-500 text-sm mb-4">{validationErrors.cart}</p>
+          )}
 
           <button
             onClick={handlePlaceOrder}

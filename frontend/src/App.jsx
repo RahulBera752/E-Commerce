@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./helpers/scrollTop";
@@ -13,9 +13,7 @@ import { SummaryApi } from "./common";
 
 const App = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  // ✅ Fetch user and cart on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -32,7 +30,7 @@ const App = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
+        credentials: "include", // sends cookies as well (optional)
       });
 
       const data = await response.json();
@@ -40,6 +38,7 @@ const App = () => {
       if (data.success) {
         dispatch(setUserDetails(data.data));
       } else {
+        // Token invalid
         dispatch(setUserDetails(null));
         localStorage.removeItem("token");
       }
@@ -76,18 +75,7 @@ const App = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-center"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer position="top-center" autoClose={3000} />
       <Header />
       <ScrollToTop />
       <main className="min-h-[calc(100vh-120px)] pt-16 bg-slate-100">

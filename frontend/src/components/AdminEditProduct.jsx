@@ -1,4 +1,3 @@
-// src/components/AdminEditProduct.jsx
 import React, { useState } from 'react';
 import { CgClose } from 'react-icons/cg';
 import { FaCloudUploadAlt } from 'react-icons/fa';
@@ -67,9 +66,9 @@ const AdminEditProduct = ({ onClose, productData, fetchData }) => {
     }
 
     try {
-      const apiUrl = `${SummaryApi.updateProduct.url}/${data._id}`; // ✅ Appending ID in URL
-      const response = await fetch(apiUrl, {
-        method: SummaryApi.updateProduct.method,
+      const { url, method } = SummaryApi.updateProduct(data._id); // ✅ FIXED usage
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
