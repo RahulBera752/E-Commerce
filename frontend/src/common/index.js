@@ -3,7 +3,6 @@
 const BASE_URL = "http://localhost:8080";
 
 export const SummaryApi = {
-  // ✅ Auth APIs
   signup: {
     url: `${BASE_URL}/api/user/signup`,
     method: "POST",
@@ -87,7 +86,29 @@ export const SummaryApi = {
     method: "POST",
   },
   allOrders: {
-    url: `${BASE_URL}/api/user/all-orders`, // ✅ ADDED THIS
+    url: `${BASE_URL}/api/user/all-orders`,
     method: "GET",
   },
+  updateOrderStatus: (id) => ({
+    url: `${BASE_URL}/api/user/update-order-status/${id}`,
+    method: "PATCH",
+  }),
+  myOrders: {
+    url: `${BASE_URL}/api/user/my-orders`,
+    method: "GET",
+  },
+
+  // ✅ Address APIs
+  getAddresses: {
+    url: `${BASE_URL}/api/user/addresses`,
+    method: "GET",
+  },
+  addAddress: {
+    url: `${BASE_URL}/api/user/address`,
+    method: "POST",
+  },
+  setDefaultAddress: (id) => ({
+    url: `${BASE_URL}/api/user/address/default/${id}`,
+    method: "PATCH",
+  }),
 };

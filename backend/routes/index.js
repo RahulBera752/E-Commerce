@@ -7,8 +7,12 @@ import userSignInController from "../controller/user/userSignin.js";
 import userSignUpController from "../controller/user/userSignup.js";
 import authToken from "../middleware/authToken.js";
 import placeOrderController from "../controller/user/placeOrder.js";
-import viewUserOrders from "../controller/user/viewUserOrders.js";
+import getMyOrdersController from "../controller/user/getMyOrdersController.js";
 import getallOrdersController from "../controller/user/getAllOrdersController.js";
+import updateOrderStatusController from "../controller/product/updateOrderStatusController.js";
+import getAddresses from "../controller/user/getAddresses.js";
+import addAddress from "../controller/user/addAddress.js";
+import setDefaultAddress from "../controller/user/setDefaultAddress.js";
 
 // Product Controllers
 import addProduct from "../controller/product/addProduct.js";
@@ -38,6 +42,12 @@ router.get("/userLogout", authToken, userLogoutController);
 router.get("/all-users", authToken, getAllUsersController);
 router.patch("/change-role", authToken, changeUserRole);
 router.get("/all-orders", authToken, getallOrdersController);
+router.patch("/update-order-status/:id", authToken, updateOrderStatusController);
+
+// Address Book
+router.get("/addresses", authToken, getAddresses);
+router.post("/address", authToken, addAddress);
+router.patch("/address/default/:id", authToken, setDefaultAddress);
 
 // Product Routes
 router.get("/get-categoryProduct", getCategoryProduct);
@@ -56,7 +66,7 @@ router.delete("/delete-cart-product", authToken, deleteCartProduct);
 
 // Order Routes
 router.post("/place-order", authToken, placeOrderController);
-router.get("/my-orders", authToken, viewUserOrders);
+router.get("/my-orders", authToken, getMyOrdersController);
 
 // Razorpay Route
 router.post("/create-order", authToken, razorpayOrderController);

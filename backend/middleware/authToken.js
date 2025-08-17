@@ -1,11 +1,18 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load environment variables (e.g., JWT_SECRET)
+dotenv.config();
 
 const authToken = async (req, res, next) => {
   try {
-    const token = req.cookies.token; // Get token from cookie
+    let token = req.cookies.token;
+
+    // ✅ Also check "Authorization: Bearer <token>"
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    console.log("📌 Incoming token:", token);
 
     if (!token) {
       return res.status(401).json({
@@ -14,15 +21,24 @@ const authToken = async (req, res, next) => {
       });
     }
 
-    // Verify JWT token
+    // ✅ Verify JWT token
     const decode = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach user ID to the request for use in protected routes
+    console.log("📌 Decoded token:", decode);
+
+    // ✅ Use "decode.id" since we signed token as { id: user._id }
     req.userId = decode.id;
 
-    next(); // Continue to the next middleware or route
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Invalid token payload",
+      });
+    }
+
+    next();
   } catch (err) {
-    console.error("authToken error:", err.message || err);
+    console.error("authToken error:", err.message);
     res.status(401).json({
       success: false,
       message: "Unauthorized: Invalid or expired token",

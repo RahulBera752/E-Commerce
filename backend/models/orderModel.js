@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user", // ✅ Must match your user model name exactly
+      ref: "User", // ✅ must match user model name
       required: true,
     },
     name: {
@@ -23,7 +23,7 @@ const orderSchema = new mongoose.Schema(
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "product", // ✅ fix: lowercase to match your product model
+          ref: "Product", // ✅ must match product model name
           required: true,
         },
         quantity: {
@@ -52,6 +52,5 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Fix OverwriteModelError
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 export default Order;

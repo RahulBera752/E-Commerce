@@ -1,5 +1,4 @@
-// backend/controller/userDetails.js
-import userModel from '../../models/userModel.js';
+import userModel from "../../models/userModel.js";
 
 const userDetailsController = async (req, res) => {
   try {
@@ -12,7 +11,6 @@ const userDetailsController = async (req, res) => {
       });
     }
 
-    // Full user info for frontend usage
     res.status(200).json({
       success: true,
       data: {
@@ -25,9 +23,8 @@ const userDetailsController = async (req, res) => {
       },
       message: "User details fetched successfully",
     });
-
   } catch (err) {
-    console.error("Error in userDetailsController:", err.message || err);
+    console.error("Error in userDetailsController:", err.message);
     res.status(500).json({
       success: false,
       message: "Something went wrong",

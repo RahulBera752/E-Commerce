@@ -26,9 +26,10 @@ const Header = () => {
       }
 
       try {
-        const res = await fetch(`${SummaryApi.searchProduct.url}?query=${encodeURIComponent(search)}`, {
-          credentials: 'include',
-        });
+        const res = await fetch(
+          `${SummaryApi.searchProduct.url}?query=${encodeURIComponent(search)}`,
+          { credentials: 'include' }
+        );
         const data = await res.json();
         if (data.success) {
           setSuggestions(data.data.slice(0, 5)); // Limit to 5 suggestions
@@ -39,7 +40,6 @@ const Header = () => {
     };
 
     const timeout = setTimeout(fetchSuggestions, 300); // debounce
-
     return () => clearTimeout(timeout);
   }, [search]);
 
@@ -111,7 +111,11 @@ const Header = () => {
                 <div
                   key={index}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSuggestionClick(item.productName || item.category || item.brandName)}
+                  onClick={() =>
+                    handleSuggestionClick(
+                      item.productName || item.category || item.brandName
+                    )
+                  }
                 >
                   {item.productName || item.category || item.brandName}
                 </div>
@@ -122,22 +126,30 @@ const Header = () => {
 
         {/* Icons and Buttons */}
         <div className="flex items-center gap-5">
-          {/* User Avatar */}
+          {/* User Avatar / About Me */}
           <div className="relative flex justify-center text-2xl">
             {user?.profilePic ? (
-              <img
-                src={user.profilePic}
-                alt={user.name}
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              <Link to="/account" title="My Account">
+                <img
+                  src={user.profilePic}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                />
+              </Link>
             ) : (
-              <FaRegCircleUser />
+              <Link to="/account" title="My Account">
+                <FaRegCircleUser className="cursor-pointer" />
+              </Link>
             )}
           </div>
 
           {/* Admin Panel Icon */}
           {user?.role === "ADMIN" && (
-            <Link to="/admin-panel" className="text-2xl hover:text-red-600 transition" title="Admin Panel">
+            <Link
+              to="/admin-panel"
+              className="text-2xl hover:text-red-600 transition"
+              title="Admin Panel"
+            >
               <MdAdminPanelSettings />
             </Link>
           )}

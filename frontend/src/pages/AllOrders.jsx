@@ -33,6 +33,33 @@ const AllOrders = () => {
     }
   };
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const response = await fetch(SummaryApi.updateOrderStatus(orderId).url, {
+        method: SummaryApi.updateOrderStatus(orderId).method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Order status updated");
+        setOrders((prev) =>
+          prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      console.error("Update Status Error:", err);
+      toast.error("Failed to update status");
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -52,7 +79,19 @@ const AllOrders = () => {
             <p><b>Phone:</b> {order.phone}</p>
             <p><b>Address:</b> {order.address}</p>
             <p><b>Total:</b> ₹{order.total}</p>
-            <p><b>Status:</b> {order.status}</p>
+            <p>
+              <b>Status:</b>
+              <select
+                value={order.status}
+                onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                className="ml-2 border p-1 rounded"
+              >
+                <option value="PLACED">PLACED</option>
+                <option value="SHIPPED">SHIPPED</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </p>
             <p><b>Items:</b></p>
             <ul className="ml-4 mt-2">
               {order.items.map((item, index) => (
