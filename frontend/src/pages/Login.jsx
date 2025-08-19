@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,6 +12,7 @@ function Login() {
   const user = useSelector(getUser);
 
   const [data, setData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   // ✅ Redirect if already logged in
   useEffect(() => {
@@ -32,36 +34,45 @@ function Login() {
       return;
     }
 
+    const payload = {
+      email: data.email.trim().toLowerCase(),
+      password: data.password.trim(),
+    };
+
     try {
-      console.log("Submitting login with:", data);
+      setLoading(true);
+      console.log("🔑 Submitting login with:", payload);
 
       const res = await fetch(SummaryApi.signin.url, {
         method: SummaryApi.signin.method,
-        credentials: "include", // If using cookies
+        credentials: "include", // needed if backend sets cookies
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const resData = await res.json();
-      console.log("Login response:", resData);
+      console.log("📩 Login response:", resData);
 
       if (res.ok && resData.success) {
         toast.success("Login Successful!");
 
-        // ✅ Store token for refresh logic
+        // ✅ Save token for persistence
         localStorage.setItem("token", resData.token);
 
-        // ✅ Update Redux state
+        // ✅ Update Redux user state
         dispatch(setUserDetails(resData.data));
+
         navigate("/");
       } else {
-        toast.error(resData.message || "Login failed");
+        toast.error(resData.message || "Invalid email or password");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Something went wrong");
+      console.error("❌ Login error:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,9 +110,10 @@ function Login() {
 
         <button
           type="submit"
-          className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition"
+          disabled={loading}
+          className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition disabled:opacity-50"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-center text-sm">

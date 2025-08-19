@@ -1,65 +1,51 @@
-import bcrypt from "bcryptjs";
+// controller/user/handleSignin.js
 import jwt from "jsonwebtoken";
 import User from "../../models/userModel.js";
-import dotenv from "dotenv";
 
-dotenv.config(); // ✅ Load .env variables
-
-const userSignInController = async (req, res) => {
+const handleSignin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 🔍 Find user by email
-    const user = await User.findOne({ email });
+    // 1️⃣ Normalize email
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User does not exist",
-      });
+      return res.status(400).json({ success: false, message: "Invalid email or password" });
     }
 
-    // 🔐 Compare passwords
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+    // 2️⃣ Compare password (plain input vs hashed in DB)
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Invalid email or password" });
     }
 
-    // 🪙 Generate JWT token
+    // 3️⃣ Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      expiresIn: "7d",
     });
 
-    // 🍪 Set token in cookie
+    // 4️⃣ Send token in cookie + response
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "Lax",
-      secure: false, // Set to true if using HTTPS
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
 
-    // ✅ Respond with token and user data
-    res.status(200).json({
+    return res.json({
       success: true,
-      message: "Login Successful",
-      token, // ✅ Token added here
-      data: {
-        _id: user._id,
+      message: "Login successful",
+      token, // frontend can use this in localStorage or headers
+      user: {
+        id: user._id,
         name: user.name,
         email: user.email,
-        profilePic: user.profilePic,
-        role: user.isAdmin ? "ADMIN" : "GENERAL",
+        role: user.role,
+        profilePic: user.profilePic || "",
       },
     });
   } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message || "Internal Server Error",
-    });
+    console.error("Signin error:", err);
+    return res.status(500).json({ success: false, message: "Login failed" });
   }
 };
 
-export default userSignInController;
+export default handleSignin;

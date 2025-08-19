@@ -1,11 +1,11 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { SummaryApi } from '../common/index'
-import { FaStar, FaStarHalf } from "react-icons/fa"
-import displayINRCurrency from '../helpers/displayCurrency'
-import addToCart from '../helpers/addToCart'
-import { Context } from '../context'
-import CategoryWiseProductDisplay from '../components/CategoryWiseProductDisplay'
+import React, { useCallback, useEffect, useState, useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { SummaryApi } from '../common/index';
+import { FaStar, FaStarHalf } from "react-icons/fa";
+import displayINRCurrency from '../helpers/displayCurrency';
+import addToCart from '../helpers/addToCart';
+import { Context } from '../context';
+import CategoryWiseProductDisplay from '../components/CategoryWiseProductDisplay';
 import VerticalCardProduct from '../components/VerticalCardProduct';
 
 const ProductDetails = () => {
@@ -17,75 +17,72 @@ const ProductDetails = () => {
     description: "",
     price: "",
     sellingPrice: ""
-  })
+  });
 
-  const params = useParams()
-  const [loading, setLoading] = useState(true)
-  const [activeImage, setActiveImage] = useState("")
-  const [zoomImageCoordinate, setZoomImageCoordinate] = useState({ x: 0, y: 0 })
-  const [zoomImage, setZoomImage] = useState(false)
+  const params = useParams();
+  const [loading, setLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState("");
+  const [zoomImageCoordinate, setZoomImageCoordinate] = useState({ x: 0, y: 0 });
+  const [zoomImage, setZoomImage] = useState(false);
 
-  const { fetchUserAddToCart } = useContext(Context)
-  const navigate = useNavigate()
+  const { fetchUserAddToCart } = useContext(Context);
+  const navigate = useNavigate();
 
   const fetchProductDetails = async () => {
     try {
-      setLoading(true)
-      const { url, method } = SummaryApi.productDetails(params.id)
+      setLoading(true);
+      const { url, method } = SummaryApi.productDetails(params.id);
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
+        headers: { "Content-Type": "application/json" }
+      });
 
-      const result = await response.json()
-      setLoading(false)
+      const result = await response.json();
+      setLoading(false);
 
       if (!result.success) {
-        console.error("Failed to fetch product:", result.message)
-        return
+        console.error("Failed to fetch product:", result.message);
+        return;
       }
 
-      setData(result.data || {})
-      setActiveImage(result.data?.productImage?.[0] || "")
+      setData(result.data || {});
+      setActiveImage(result.data?.productImage?.[0] || "");
     } catch (error) {
-      setLoading(false)
-      console.error("Error fetching product details:", error)
+      setLoading(false);
+      console.error("Error fetching product details:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchProductDetails()
-  }, [params])
+    fetchProductDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
-  const handleMouseEnterProduct = (imageURL) => {
-    setActiveImage(imageURL)
-  }
+  const handleMouseEnterProduct = (imageURL) => setActiveImage(imageURL);
 
   const handleZoomImage = useCallback((e) => {
-    setZoomImage(true)
-    const { left, top, width, height } = e.target.getBoundingClientRect()
-    const x = (e.clientX - left) / width
-    const y = (e.clientY - top) / height
-    setZoomImageCoordinate({ x, y })
-  }, [])
+    setZoomImage(true);
+    const { left, top, width, height } = e.target.getBoundingClientRect();
+    const x = (e.clientX - left) / width;
+    const y = (e.clientY - top) / height;
+    setZoomImageCoordinate({ x, y });
+  }, []);
 
-  const handleLeaveImageZoom = () => setZoomImage(false)
+  const handleLeaveImageZoom = () => setZoomImage(false);
 
   const handleAddToCart = async (e, id) => {
-    await addToCart(e, id)
-    fetchUserAddToCart()
-  }
+    await addToCart(e, id);
+    fetchUserAddToCart();
+  };
 
-  const handleBuyProduct = async (e, id) => {
-    await addToCart(e, id)
-    fetchUserAddToCart()
-    navigate("/cart")
-  }
+  // ✅ UPDATED: Go straight to Order page with this product (do NOT add to cart)
+  const handleBuyProduct = (e, id) => {
+    e.preventDefault();
+    navigate("/order", { state: { buyNow: { productId: id, quantity: 1 } } });
+  };
 
-  const productImageListLoading = new Array(4).fill(null)
+  const productImageListLoading = new Array(4).fill(null);
 
   return (
     <div className='container mx-auto p-4'>
@@ -110,7 +107,7 @@ const ProductDetails = () => {
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: `${zoomImageCoordinate.x * 100}% ${zoomImageCoordinate.y * 100}%`
                   }}
-                ></div>
+                />
               </div>
             )}
           </div>
@@ -140,18 +137,18 @@ const ProductDetails = () => {
         {/* Product Details */}
         {loading ? (
           <div className='grid gap-1 w-full'>
-            <p className='bg-slate-200 animate-pulse h-6 lg:h-8 w-full rounded-full'></p>
-            <h2 className='text-2xl lg:text-4xl font-medium h-6 lg:h-8 bg-slate-200 animate-pulse w-full'></h2>
-            <p className='capitalize text-slate-400 bg-slate-200 min-w-[100px] animate-pulse h-6 lg:h-8 w-full'></p>
-            <div className='text-red-600 bg-slate-200 h-6 lg:h-8 animate-pulse w-full'></div>
-            <div className='flex items-center gap-2 text-2xl lg:text-3xl font-medium my-1 h-6 lg:h-8 animate-pulse w-full'></div>
+            <p className='bg-slate-200 animate-pulse h-6 lg:h-8 w-full rounded-full' />
+            <h2 className='text-2xl lg:text-4xl font-medium h-6 lg:h-8 bg-slate-200 animate-pulse w-full' />
+            <p className='capitalize text-slate-400 bg-slate-200 min-w-[100px] animate-pulse h-6 lg:h-8 w-full' />
+            <div className='text-red-600 bg-slate-200 h-6 lg:h-8 animate-pulse w-full' />
+            <div className='flex items-center gap-2 text-2xl lg:text-3xl font-medium my-1 h-6 lg:h-8 animate-pulse w-full' />
             <div className='flex items-center gap-3 my-2 w-full'>
-              <button className='h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full'></button>
-              <button className='h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full'></button>
+              <button className='h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full' />
+              <button className='h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full' />
             </div>
             <div className='w-full'>
-              <p className='text-slate-600 font-medium my-1 h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full'></p>
-              <p className='bg-slate-200 rounded animate-pulse h-10 lg:h-12 w-full'></p>
+              <p className='text-slate-600 font-medium my-1 h-6 lg:h-8 bg-slate-200 rounded animate-pulse w-full' />
+              <p className='bg-slate-200 rounded animate-pulse h-10 lg:h-12 w-full' />
             </div>
           </div>
         ) : (
@@ -195,9 +192,9 @@ const ProductDetails = () => {
       {data?.category && (
         <CategoryWiseProductDisplay category={data?.category} heading={"Recommended Product"} />
       )}
-      <VerticalCardProduct category={data. category} heading={"Recommended Product"}/>
+      <VerticalCardProduct category={data.category} heading={"Recommended Product"} />
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetails
+export default ProductDetails;

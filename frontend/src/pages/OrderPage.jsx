@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { SummaryApi } from "../common";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Order = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const buyNow = location.state?.buyNow || null; // { productId, quantity }
   const user = useSelector((state) => state?.user?.user);
+
   const [cartItems, setCartItems] = useState([]);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -17,15 +20,39 @@ const Order = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
+  const tokenHeader = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  };
+
+  // 🔎 If landed from "Buy", load only that product; else load entire cart
+  useEffect(() => {
+    const load = async () => {
+      if (buyNow?.productId) {
+        try {
+          const { url, method } = SummaryApi.productDetails(buyNow.productId);
+          const res = await fetch(url, { method, headers: { "Content-Type": "application/json" } });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message || "Failed to load product");
+          setCartItems([{ productId: data.data, quantity: buyNow.quantity || 1 }]);
+        } catch (err) {
+          toast.error(err.message || "Failed to load product");
+        }
+      } else {
+        // original cart fetch
+        fetchCartItems();
+      }
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyNow]);
+
   const fetchCartItems = async () => {
     try {
       const response = await fetch(SummaryApi.addToCartViewProduct.url, {
         method: SummaryApi.addToCartViewProduct.method,
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: tokenHeader,
       });
       const data = await response.json();
       if (data.success) {
@@ -37,10 +64,6 @@ const Order = () => {
       toast.error(err.message || "Failed to load cart items");
     }
   };
-
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
 
   useEffect(() => {
     const totalPrice = cartItems.reduce(
@@ -122,10 +145,7 @@ const Order = () => {
   const placeFinalOrder = async (orderPayload) => {
     const response = await fetch(SummaryApi.order.url, {
       method: SummaryApi.order.method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: tokenHeader,
       credentials: "include",
       body: JSON.stringify(orderPayload),
     });
@@ -140,23 +160,22 @@ const Order = () => {
   };
 
   const handleOnlinePayment = async (orderPayload) => {
-    const loadRazorpayScript = () => {
-      return new Promise((resolve) => {
+    const loadRazorpayScript = () =>
+      new Promise((resolve) => {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
         script.onload = () => resolve(true);
         script.onerror = () => resolve(false);
         document.body.appendChild(script);
       });
-    };
 
-    const res = await loadRazorpayScript();
-    if (!res) throw new Error("Failed to load Razorpay SDK");
+    const loaded = await loadRazorpayScript();
+    if (!loaded) throw new Error("Failed to load Razorpay SDK");
 
     const orderRes = await fetch("http://localhost:8080/api/payment/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: orderPayload.total }), // ✅ fixed: no * 100 here
+      body: JSON.stringify({ amount: orderPayload.total }),
     });
 
     const data = await orderRes.json();
@@ -184,13 +203,11 @@ const Order = () => {
         }
       },
       prefill: {
-        name: user.name,
-        email: user.email,
+        name: user?.name,
+        email: user?.email,
         contact: phone,
       },
-      theme: {
-        color: "#0d6efd",
-      },
+      theme: { color: "#0d6efd" },
     };
 
     const razorpay = new window.Razorpay(options);

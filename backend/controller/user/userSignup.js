@@ -1,32 +1,50 @@
+// controller/user/handleSignup.js
 import User from "../../models/userModel.js";
-
-
-import bcrypt from "bcryptjs";
 
 const handleSignup = async (req, res) => {
   try {
-    const { name, email, password, profilePic } = req.body;
+    let { name, email, password, profilePic } = req.body;
 
+    // 1️⃣ Normalize email
+    email = email.trim().toLowerCase();
+
+    // 2️⃣ Check if user already exists
     const existUser = await User.findOne({ email });
     if (existUser) {
-      return res.status(400).json({ message: 'Email already exists' });
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
+      });
     }
 
-    const hashPassword = await bcrypt.hash(password, 10);
-
+    // 3️⃣ Create new user (password will be hashed by pre-save hook in model)
     const newUser = new User({
       name,
       email,
-      password: hashPassword,
-      profilePic: profilePic || "", // Optional fallback
+      password,   // plain password → hashed automatically in model
+      profilePic: profilePic || "",
     });
 
     await newUser.save();
-    res.status(201).json({ success: true, message: 'User registered successfully' });
 
+    // 4️⃣ Send success response
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        profilePic: newUser.profilePic || "",
+      },
+    });
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ success: false, message: 'Signup failed' });
+    console.error("Signup error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Signup failed",
+    });
   }
 };
 

@@ -7,7 +7,7 @@ import userSignInController from "../controller/user/userSignin.js";
 import userSignUpController from "../controller/user/userSignup.js";
 import authToken from "../middleware/authToken.js";
 import placeOrderController from "../controller/user/placeOrder.js";
-import getMyOrdersController from "../controller/user/getMyOrdersController.js";
+import orderController from "../controller/user/getMyOrdersController.js";
 import getallOrdersController from "../controller/user/getAllOrdersController.js";
 import updateOrderStatusController from "../controller/product/updateOrderStatusController.js";
 import getAddresses from "../controller/user/getAddresses.js";
@@ -66,7 +66,8 @@ router.delete("/delete-cart-product", authToken, deleteCartProduct);
 
 // Order Routes
 router.post("/place-order", authToken, placeOrderController);
-router.get("/my-orders", authToken, getMyOrdersController);
+router.get("/my-orders", authToken, orderController.getMyOrdersController);
+router.patch("/cancel-order", authToken, orderController.cancelOrderController);
 
 // Razorpay Route
 router.post("/create-order", authToken, razorpayOrderController);

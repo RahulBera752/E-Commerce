@@ -79,11 +79,12 @@ const Header = () => {
     <header className="h-16 shadow-md bg-white fixed w-full z-40">
       <div className="h-full container mx-auto flex items-center px-4 justify-between relative">
         {/* Logo */}
-        <div>
-          <Link to="/">
-            <Logo w={90} h={50} />
-          </Link>
+        <div className="-ml-10 flex-shrink-0">
+        <Link to="/">
+        <Logo w={150} h={90} />
+        </Link>
         </div>
+
 
         {/* Search Bar */}
         <div className="relative hidden lg:flex items-center w-full max-w-sm">

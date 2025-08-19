@@ -5,7 +5,7 @@ import { MdDelete } from "react-icons/md";
 import productCategory from '../helpers/productCategory';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { SummaryApi } from '../common'; // Make sure this is correctly exporting SummaryApi
+import { SummaryApi } from '../common';
 import DisplayImage from './DisplayImage';
 
 const UploadProduct = ({ onClose, fetchData }) => {
@@ -22,11 +22,11 @@ const UploadProduct = ({ onClose, fetchData }) => {
   const [openFullScreenImage, setOpenFullScreenImage] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState("");
 
-  // ✅ Cloudinary Upload (unsigned preset)
+  // ✅ Cloudinary Upload
   const uploadImage = async (imageFile) => {
     const formData = new FormData();
     formData.append("file", imageFile);
-    formData.append("upload_preset", "ecommerce_uploads"); // Use your unsigned preset
+    formData.append("upload_preset", "ecommerce_uploads");
 
     const response = await fetch("https://api.cloudinary.com/v1_1/dspjqxvxl/image/upload", {
       method: "POST",
@@ -39,7 +39,7 @@ const UploadProduct = ({ onClose, fetchData }) => {
       throw new Error("Image upload failed");
     }
 
-    return data;
+    return data.secure_url;
   };
 
   const handleOnChange = (e) => {
@@ -47,18 +47,21 @@ const UploadProduct = ({ onClose, fetchData }) => {
     setData(prev => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Multiple file upload support
   const handleUploadProduct = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files); // convert FileList to array
+    if (!files.length) return;
 
     try {
-      const uploaded = await uploadImage(file);
+      const uploadPromises = files.map(file => uploadImage(file));
+      const uploadedUrls = await Promise.all(uploadPromises);
+
       setData(prev => ({
         ...prev,
-        productImage: [...prev.productImage, uploaded.secure_url]
+        productImage: [...prev.productImage, ...uploadedUrls]
       }));
     } catch (error) {
-      toast.error("Image upload failed. Try again.");
+      toast.error("Some images failed to upload. Try again.");
     }
   };
 
@@ -72,54 +75,51 @@ const UploadProduct = ({ onClose, fetchData }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const { productName, brandName, category, productImage, price, sellingPrice, description } = data;
+    const { productName, brandName, category, productImage, price, sellingPrice, description } = data;
 
-  // ✅ Validate required fields
-  if (
-    !productName.trim() ||
-    !brandName.trim() ||
-    !category.trim() ||
-    !price ||
-    !sellingPrice ||
-    !description.trim() ||
-    productImage.length === 0
-  ) {
-    toast.error("All fields are required, including product image.");
-    return;
-  }
-
-  try {
-    const response = await fetch(SummaryApi.uploadProduct.url, {
-      method: SummaryApi.uploadProduct.method,
-      credentials: 'include',
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-
-    const responseData = await response.json();
-
-    if (responseData.success) {
-      toast.success(responseData.message);
-      onClose();
-      fetchData();
-    } else {
-      toast.error(responseData.message || "Upload failed");
+    if (
+      !productName.trim() ||
+      !brandName.trim() ||
+      !category.trim() ||
+      !price ||
+      !sellingPrice ||
+      !description.trim() ||
+      productImage.length === 0
+    ) {
+      toast.error("All fields are required, including product image.");
+      return;
     }
-  } catch (error) {
-    toast.error("Something went wrong. Try again.");
-    console.error(error);
-  }
-};
 
+    try {
+      const response = await fetch(SummaryApi.uploadProduct.url, {
+        method: SummaryApi.uploadProduct.method,
+        credentials: 'include',
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        toast.success(responseData.message);
+        onClose();
+        fetchData();
+      } else {
+        toast.error(responseData.message || "Upload failed");
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Try again.");
+      console.error(error);
+    }
+  };
 
   return (
     <div className='fixed w-full h-full bg-slate-200 bg-opacity-35 top-0 left-0 right-0 bottom-0 flex justify-center items-center z-10'>
       <div className='bg-white p-4 rounded w-full max-w-2xl h-full max-h-[80%] overflow-hidden'>
-
         <div className='flex justify-between items-center pb-3'>
           <h2 className='font-bold text-lg'>Upload Product</h2>
           <div className='text-2xl hover:text-red-600 cursor-pointer' onClick={onClose}>
@@ -171,8 +171,14 @@ const UploadProduct = ({ onClose, fetchData }) => {
             <div className='p-2 bg-slate-100 border rounded h-32 flex justify-center items-center cursor-pointer'>
               <div className='text-slate-500 flex flex-col items-center gap-2'>
                 <FaCloudUploadAlt className='text-4xl' />
-                <p className='text-sm'>Upload Product Image</p>
-                <input type='file' id='uploadImageInput' className='hidden' onChange={handleUploadProduct} />
+                <p className='text-sm'>Upload Product Images (You can select multiple)</p>
+                <input
+                  type='file'
+                  id='uploadImageInput'
+                  multiple
+                  className='hidden'
+                  onChange={handleUploadProduct}
+                />
               </div>
             </div>
           </label>

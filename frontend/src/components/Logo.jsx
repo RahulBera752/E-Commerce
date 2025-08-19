@@ -1,12 +1,15 @@
 import React from "react";
+import logoImage from "../assets/MyWebLogo.png";
 
-const Logo = ({ w = 90, h = 50 }) => {
+const Logo = ({ w = 500, h = 200 }) => {
   return (
-    <div
-      style={{ width: `${w}px`, height: `${h}px` }}
-      className="flex items-center justify-center font-bold text-skyblue-600 text-2xl"
-    >
-    𝕽𝖆𝖍𝖚𝖑
+    <div className="flex items-center justify-center">
+      <img
+        src={logoImage}
+        alt="GhoroaStore Logo"
+        style={{ width: `${w}px`, height: `${h}px` }}
+        className="object-contain"
+      />
     </div>
   );
 };

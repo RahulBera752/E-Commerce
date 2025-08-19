@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ✅ must match user model name
+      ref: "User", // ✅ matches userModel
       required: true,
     },
     name: {
@@ -23,7 +23,7 @@ const orderSchema = new mongoose.Schema(
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product", // ✅ must match product model name
+          ref: "Product", // ✅ matches productModel
           required: true,
         },
         quantity: {
@@ -53,4 +53,5 @@ const orderSchema = new mongoose.Schema(
 );
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+
 export default Order;

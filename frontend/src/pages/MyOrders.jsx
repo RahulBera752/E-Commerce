@@ -17,14 +17,14 @@ const MyOrders = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Please login to view orders");
       }
 
       const response = await fetch(
-        `${SummaryApi.myOrders.url}?page=${page}&limit=${ordersPerPage}`, 
+        `${SummaryApi.myOrders.url}?page=${page}&limit=${ordersPerPage}`,
         {
           method: SummaryApi.myOrders.method,
           credentials: "include",
@@ -38,7 +38,9 @@ const MyOrders = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || `Request failed with status ${response.status}`);
+        throw new Error(
+          data.message || `Request failed with status ${response.status}`
+        );
       }
 
       if (data.success) {
@@ -87,72 +89,71 @@ const MyOrders = () => {
   const generateInvoice = (order) => {
     try {
       const doc = new jsPDF();
-      
-      // Add logo (replace with your logo URL)
-      // const logoUrl = '/path/to/logo.png';
-      // doc.addImage(logoUrl, 'PNG', 14, 10, 30, 15);
-      
+
       // Invoice header
       doc.setFontSize(20);
       doc.setTextColor(40, 40, 40);
-      doc.text("INVOICE", 105, 20, { align: 'center' });
-      
+      doc.text("INVOICE", 105, 20, { align: "center" });
+
       // Company info
+
+      doc.setFontSize(18);
+      doc.setFont("times", "bold");
+      doc.text("GhoroaStore", 105, 30, { align: "center" });
       doc.setFontSize(10);
-      doc.text("Your Company Name", 105, 30, { align: 'center' });
-      doc.text("123 Business Street", 105, 35, { align: 'center' });
-      doc.text("City, State 10001", 105, 40, { align: 'center' });
-      
+      doc.text("Policepara,Garia", 105, 35, { align: "center" });
+      doc.text("Kolkta, West Bengal 700152", 105, 40, { align: "center" });
+
       // Invoice details
       doc.setFontSize(12);
       doc.text(`Invoice #: ${order._id}`, 14, 60);
-      doc.text(`Date: ${moment(order.createdAt).format("MMMM D, YYYY")}`, 14, 70);
-      
+      doc.text(`Order Date: ${moment(order.createdAt).format("MMMM D, YYYY")}`, 14, 70);
+
       // Customer info
       doc.text(`Bill To: ${order.name}`, 14, 85);
       doc.text(`${order.address}`, 14, 95);
       doc.text(`Phone: ${order.phone}`, 14, 105);
-      
+
       // Items table
       autoTable(doc, {
         startY: 120,
-        head: [['Description', 'Price', 'Qty', 'Amount']],
-        body: order.items.map(item => [
+        head: [["Description", "Qty", "Price", "Amount"]],
+        body: order.items.map((item) => [
           item.productName || item.productId?.productName || "Product",
-          `₹${item.sellingPrice?.toFixed(2) || item.productId?.sellingPrice?.toFixed(2) || "0.00"}`,
-          item.quantity,
-          `₹${((item.quantity || 1) * (item.sellingPrice || item.productId?.sellingPrice || 0)).toFixed(2)}`
+          item.quantity || 1,
+          `Rs. ${(item.sellingPrice?.toFixed(2) || item.productId?.sellingPrice?.toFixed(2) || "0.00")}`,
+          `Rs. ${((item.quantity || 1) * (item.sellingPrice || item.productId?.sellingPrice || 0)).toFixed(2)}`,
         ]),
         headStyles: {
           fillColor: [41, 128, 185],
           textColor: 255,
-          fontStyle: 'bold'
+          fontStyle: "bold",
         },
         columnStyles: {
-          0: { cellWidth: 'auto' },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 30 }
+          0: { cellWidth: "auto" },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 30 },
         },
-        margin: { top: 120 }
+        margin: { top: 120 },
       });
-      
+
       // Total section
       const finalY = doc.lastAutoTable.finalY + 15;
       doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.text(`Subtotal: ₹${order.total?.toFixed(2) || "0.00"}`, 150, finalY);
-      doc.text(`Status: ${order.status || "PENDING"}`, 14, finalY);
-      
-      // Terms and conditions
+      doc.setFont(undefined, "bold");
+      doc.text(`Subtotal: Rs. ${order.total?.toFixed(2) || "0.00"}`, 150, finalY);
+
+
+      // Footer
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text("Thank you for your business!", 105, finalY + 20, { align: 'center' });
-      doc.text("Terms: Payment due within 30 days", 105, finalY + 25, { align: 'center' });
-      
+      doc.text("Thank you For Visiting", 105, finalY + 20, { align: "center" });
+      doc.text("Contact RS store: 033-4798245", 105, finalY + 25, { align: "center" });
+
       // Save the PDF
-      doc.save(`invoice_${order._id}_${moment().format('YYYYMMDD')}.pdf`);
-      
+      doc.save(`invoice_${order._id}_${moment().format("YYYYMMDD")}.pdf`);
+
       toast.success("Invoice downloaded successfully");
     } catch (error) {
       console.error("Invoice generation error:", error);
@@ -177,9 +178,11 @@ const MyOrders = () => {
       CANCELLED: "bg-red-100 text-red-800",
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        statusClasses[status] || "bg-gray-100 text-gray-800"
-      }`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          statusClasses[status] || "bg-gray-100 text-gray-800"
+        }`}
+      >
         {status}
       </span>
     );
@@ -206,7 +209,7 @@ const MyOrders = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">My Orders</h1>
-        
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -242,12 +245,12 @@ const MyOrders = () => {
                       <p className="font-medium text-sm">{order._id}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Date</p>
+                      <p className="text-xs text-gray-500">Order Date</p> {}
                       <p className="text-sm">{formatDate(order.createdAt)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Total</p>
-                      <p className="font-medium text-sm">₹{order.total?.toFixed(2)}</p>
+                      <p className="font-medium text-sm">Rs. {order.total?.toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Status</p>
@@ -255,6 +258,7 @@ const MyOrders = () => {
                     </div>
                   </div>
 
+                  {/* Items */}
                   <div className="p-4">
                     <h3 className="font-medium mb-2">Items</h3>
                     <div className="space-y-3">
@@ -262,8 +266,16 @@ const MyOrders = () => {
                         <div key={index} className="flex items-start gap-3">
                           <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded overflow-hidden">
                             <img
-                              src={item.productImage?.[0] || item.productId?.productImage?.[0] || "/placeholder.png"}
-                              alt={item.productName || item.productId?.productName || "Product"}
+                              src={
+                                item.productImage?.[0] ||
+                                item.productId?.productImage?.[0] ||
+                                "/placeholder.png"
+                              }
+                              alt={
+                                item.productName ||
+                                item.productId?.productName ||
+                                "Product"
+                              }
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.src = "/placeholder.png";
@@ -272,15 +284,21 @@ const MyOrders = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-sm">
-                              {item.productName || item.productId?.productName || "Unknown Product"}
+                              {item.productName ||
+                                item.productId?.productName ||
+                                "Unknown Product"}
                             </p>
                             <p className="text-xs text-gray-600">
-                              Qty: {item.quantity} × ₹{item.sellingPrice?.toFixed(2) || item.productId?.sellingPrice?.toFixed(2) || "0.00"}
+                              Qty: {item.quantity} × Rs.
+                              {item.sellingPrice?.toFixed(2) ||
+                                item.productId?.sellingPrice?.toFixed(2) ||
+                                "0.00"}
                             </p>
                           </div>
                           <div className="text-sm font-medium">
-                            ₹{(
-                              (item.quantity || 1) * 
+                            Rs.
+                            {(
+                              (item.quantity || 1) *
                               (item.sellingPrice || item.productId?.sellingPrice || 0)
                             ).toFixed(2)}
                           </div>
@@ -289,15 +307,18 @@ const MyOrders = () => {
                     </div>
                   </div>
 
+                  {/* Actions */}
                   <div className="bg-gray-50 px-4 py-3 border-t flex justify-between">
-                    <button 
-                      onClick={() => generateInvoice(order)}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Download Invoice
-                    </button>
+                    {order.status === "DELIVERED" && (
+                      <button
+                        onClick={() => generateInvoice(order)}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Download Invoice
+                      </button>
+                    )}
                     {(order.status === "PLACED" || order.status === "PROCESSING") && (
-                      <button 
+                      <button
                         onClick={() => handleCancelOrder(order._id)}
                         className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                       >
@@ -313,7 +334,7 @@ const MyOrders = () => {
               <div className="flex justify-center mt-6">
                 <nav className="flex items-center gap-1">
                   <button
-                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                     disabled={currentPage === 1 || loading}
                     className="px-3 py-1 border rounded disabled:opacity-50"
                   >
@@ -332,7 +353,7 @@ const MyOrders = () => {
                     </button>
                   ))}
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                     disabled={currentPage === totalPages || loading}
                     className="px-3 py-1 border rounded disabled:opacity-50"
                   >

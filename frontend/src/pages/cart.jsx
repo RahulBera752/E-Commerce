@@ -7,26 +7,36 @@ import { Context } from "../context";
 
 const Cart = () => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const context = useContext(Context);
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const res = await fetch(SummaryApi.addToCartViewProduct.url, {
         method: SummaryApi.addToCartViewProduct.method,
         credentials: "include",
       });
+
+      if (res.status === 401) {
+        toast.error("Please log in to view your cart");
+        navigate("/login");
+        return;
+      }
 
       const resData = await res.json();
 
       if (resData.success) {
         setData(resData.data || []);
       } else {
-        toast.error("Failed to fetch cart items");
+        toast.error(resData.message || "Failed to fetch cart items");
       }
     } catch (err) {
       console.error("Fetch cart error:", err);
       toast.error("Something went wrong while fetching the cart");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +65,7 @@ const Cart = () => {
       if (resData.success) {
         fetchData();
       } else {
-        toast.error("Update failed");
+        toast.error(resData.message || "Update failed");
       }
     } catch (err) {
       console.error("Update error:", err);
@@ -80,7 +90,7 @@ const Cart = () => {
         context.fetchUserAddToCart?.();
         toast.success("Item removed");
       } else {
-        toast.error("Delete failed");
+        toast.error(resData.message || "Delete failed");
       }
     } catch (err) {
       console.error("Delete error:", err);
@@ -89,7 +99,7 @@ const Cart = () => {
   };
 
   const totalQuantity = data.reduce(
-    (acc, curr) => curr.productId ? acc + curr.quantity : acc,
+    (acc, curr) => (curr.productId ? acc + curr.quantity : acc),
     0
   );
 
@@ -106,73 +116,79 @@ const Cart = () => {
     <div className="container mx-auto p-4 pt-8 flex flex-col lg:flex-row gap-4">
       {/* Cart Items */}
       <div className="w-full lg:w-9/12">
-        {data.map((product, index) => {
-          const prod = product?.productId;
-          if (!prod) return null;
+        {loading ? (
+          <p className="text-center text-gray-600">Loading cart...</p>
+        ) : data.length === 0 ? (
+          <p className="text-center text-gray-600">Your cart is empty</p>
+        ) : (
+          data.map((product, index) => {
+            const prod = product?.productId;
+            if (!prod) return null;
 
-          const itemTotal = product.quantity * prod.sellingPrice;
+            const itemTotal = product.quantity * prod.sellingPrice;
 
-          return (
-            <div
-              key={product._id || index}
-              className="w-full bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4"
-            >
-              <div className="w-full md:w-2/12">
-                <img
-                  src={prod.productImage?.[0]}
-                  alt={prod.productName}
-                  className="w-full h-full object-scale-down"
-                />
-              </div>
+            return (
+              <div
+                key={product._id || index}
+                className="w-full bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4"
+              >
+                <div className="w-full md:w-2/12">
+                  <img
+                    src={prod.productImage?.[0]}
+                    alt={prod.productName}
+                    className="w-full h-full object-scale-down"
+                  />
+                </div>
 
-              <div className="w-full md:w-10/12 flex flex-col justify-between">
-                <h2 className="font-semibold text-lg">{prod.productName}</h2>
+                <div className="w-full md:w-10/12 flex flex-col justify-between">
+                  <h2 className="font-semibold text-lg">{prod.productName}</h2>
 
-                <div className="text-sm text-gray-600 mt-1">
-                  <span className="block">
-                    MRP:{" "}
-                    <span className="line-through">
-                      {displayINRCurrency(prod.price || prod.sellingPrice + 100)}
+                  <div className="text-sm text-gray-600 mt-1">
+                    <span className="block">
+                      MRP:{" "}
+                      <span className="line-through">
+                        {displayINRCurrency(prod.price || prod.sellingPrice + 100)}
+                      </span>
                     </span>
-                  </span>
-                  <span className="block">
-                    Selling Price: {displayINRCurrency(prod.sellingPrice)}
-                  </span>
-                </div>
+                    <span className="block">
+                      Selling Price: {displayINRCurrency(prod.sellingPrice)}
+                    </span>
+                  </div>
 
-                <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-2">
+                    <button
+                      onClick={() => handleQuantity("dec", product)}
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      -
+                    </button>
+                    <span className="px-4">{product.quantity}</span>
+                    <button
+                      onClick={() => handleQuantity("inc", product)}
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <p className="mt-2 font-medium">
+                    Subtotal:{" "}
+                    <span className="text-green-600">
+                      {displayINRCurrency(itemTotal)}
+                    </span>
+                  </p>
+
                   <button
-                    onClick={() => handleQuantity("dec", product)}
-                    className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                    onClick={() => handleDelete(product._id)}
+                    className="mt-2 text-sm text-red-600 hover:underline"
                   >
-                    -
-                  </button>
-                  <span className="px-4">{product.quantity}</span>
-                  <button
-                    onClick={() => handleQuantity("inc", product)}
-                    className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                  >
-                    +
+                    Remove
                   </button>
                 </div>
-
-                <p className="mt-2 font-medium">
-                  Subtotal:{" "}
-                  <span className="text-green-600">
-                    {displayINRCurrency(itemTotal)}
-                  </span>
-                </p>
-
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  className="mt-2 text-sm text-red-600 hover:underline"
-                >
-                  Remove
-                </button>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Summary */}

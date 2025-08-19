@@ -1,5 +1,5 @@
 import orderModel from "../../models/orderModel.js";
-import userModel from "../../models/userModel.js"; // ✅ FIX: register User schema
+import userModel from "../../models/userModel.js";
 
 const getallOrdersController = async (req, res) => {
   try {

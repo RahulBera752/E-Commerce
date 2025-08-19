@@ -97,6 +97,10 @@ export const SummaryApi = {
     url: `${BASE_URL}/api/user/my-orders`,
     method: "GET",
   },
+  cancelOrder: {
+    url: `${BASE_URL}/api/user/cancel-order`,
+    method: "PATCH",
+  },
 
   // ✅ Address APIs
   getAddresses: {

@@ -15,8 +15,19 @@ import SearchProduct from "../pages/SearchProduct";
 import Order from "../pages/OrderPage";
 import OrderSuccess from "../pages/OrderSuccess";
 import MyAccount from "../pages/MyAccount";
+import MyOrders from "../pages/MyOrders";
 
-import MyOrders from "../pages/MyOrders"; // ✅ fixed import
+// 🆕 Footer pages
+import AboutUs from "../pages/AboutUs";
+import ContactUs from "../pages/ContactUs";
+import FAQ from "../pages/FAQ";
+import Payments from "../pages/Payments";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import TermsOfUse from "../pages/TermsOfUse";
+import CancellationReturns from "../pages/CancellationReturns";
+import BecomeSeller from "../pages/BecomeSeller";
+import GiftCard from "../pages/GiftCard";
+import Advertise from "../pages/Advertise";
 
 const router = createBrowserRouter([
   {
@@ -42,7 +53,21 @@ const router = createBrowserRouter([
       { path: "order", element: <Order /> },
       { path: "order-success", element: <OrderSuccess /> },
       { path: "account", element: <MyAccount /> },
-      { path: "my-orders", element: <MyOrders /> }, // ✅ added
+      { path: "my-orders", element: <MyOrders /> },
+
+      // 🆕 Footer routes
+      { path: "about-us", element: <AboutUs /> },
+      { path: "contact-us", element: <ContactUs /> },
+      { path: "help-center", element: <ContactUs /> },
+      { path: "faq", element: <FAQ /> },
+      { path: "payments", element: <Payments /> },
+      { path: "privacy", element: <PrivacyPolicy /> },
+      { path: "terms-of-use", element: <TermsOfUse /> },
+      { path: "cancellation-returns", element: <CancellationReturns /> },
+      { path: "return-policy", element: <CancellationReturns /> },
+      { path: "become-seller", element: <BecomeSeller /> },
+      { path: "gift-card", element: <GiftCard /> },
+      { path: "advertise", element: <Advertise /> },
     ],
   },
 ]);
