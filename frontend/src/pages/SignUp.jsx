@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import loginIcons from '../assets/signin.gif';
-import { SummaryApi } from '../common/index';
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { SummaryApi } from "../common";
+import signinGif from "../assets/signin.gif";
+import logo from "../assets/MyWebLogo.png";
 
-const SignUp = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+function SignUp() {
+  const navigate = useNavigate();
+
   const [data, setData] = useState({
+    name: "",
     email: "",
     password: "",
-    name: "",
     confirmPassword: "",
     profilePic: "",
   });
 
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
+  // 🔹 Handle Input Change
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
@@ -26,164 +27,173 @@ const SignUp = () => {
     }));
   };
 
-  const imageToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
+  // 🔹 Handle Upload Photo
   const handleUploadPic = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const imagePic = await imageToBase64(file);
-    setData((prev) => ({
-      ...prev,
-      profilePic: imagePic,
-    }));
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "mern_product");
+
+    try {
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/djwh0zpgl/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const uploaded = await res.json();
+      console.log("Cloudinary response:", uploaded);
+
+      setData((prev) => ({
+        ...prev,
+        profilePic: uploaded.secure_url || uploaded.url,
+      }));
+
+      toast.success("Photo uploaded successfully!");
+    } catch (error) {
+      toast.error("Upload failed!");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 🔹 Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!data.name || !data.email || !data.password || !data.confirmPassword) {
-      toast.error("Please fill all fields");
-      return;
-    }
-
     if (data.password !== data.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("Passwords do not match!");
       return;
     }
 
     try {
-      const dataResponse = await fetch(SummaryApi.signup.url, {
+      const res = await fetch(SummaryApi.signup.url, {
         method: SummaryApi.signup.method,
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      const dataApi = await dataResponse.json();
+      const responseData = await res.json();
 
-      if (dataApi.success) {
-        toast.success(dataApi.message);
+      if (responseData.success) {
+        toast.success("Signup successful! Redirecting to login...");
+
+        // ✅ Redirect to login
         navigate("/login");
       } else {
-        toast.error(dataApi.message);
+        toast.error(responseData.message);
       }
     } catch (error) {
-      toast.error("Signup failed. Please try again.");
+      toast.error("Signup failed!");
     }
   };
 
   return (
-    <section id='signup'>
-      <div className='mx-auto container p-4'>
-        <div className='bg-white p-5 w-full max-w-sm mx-auto rounded-md shadow-md'>
-          <div className='w-20 h-20 mx-auto relative overflow-hidden rounded-full'>
-            <img
-              src={data.profilePic || loginIcons}
-              alt='profile preview'
-              className='w-full h-full object-cover'
+    <div className="flex min-h-screen w-full items-center justify-center bg-gray-100">
+      <div className="flex w-[900px] bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Left Blue Box */}
+        <div className="w-1/2 bg-[#4a90e2] text-white p-8 flex flex-col items-center justify-start">
+          <img src={logo} alt="Logo" className="h-16 mb-2" />
+        <h2 className="text-3xl font-bold mb-6" style={{ color: "#DAA520" }}>Sign Up</h2>
+          <h5 className="text-3xl font-bold mb-4">WelCome To GhoroaStore</h5>
+          <p className="text-center text-sm">
+            Create your account and start shopping with us
+          </p>
+        </div>
+
+        {/* Right Form */}
+        <div className="w-1/2 p-8 flex flex-col justify-center">
+          {/* Upload Photo */}
+          <div className="flex flex-col items-center mb-6">
+            <label htmlFor="profilePic" className="cursor-pointer">
+              <div className="w-24 h-24 rounded-full border-2 border-dashed border-red-500 flex items-center justify-center relative overflow-hidden">
+                {data.profilePic ? (
+                  <img
+                    src={data.profilePic}
+                    alt="Profile"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <img
+                    src={signinGif}
+                    alt="Default user"
+                    className="w-16 h-16 object-contain"
+                  />
+                )}
+              </div>
+            </label>
+            <input
+              type="file"
+              id="profilePic"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUploadPic}
             />
-            <form>
-              <label>
-                <div className='text-xs bg-opacity-80 bg-slate-200 pb-4 pt-2 cursor-pointer text-center absolute bottom-0 w-full'>
-                  Upload Photo
-                </div>
-                <input type='file' className='hidden' accept='image/*' onChange={handleUploadPic} />
-              </label>
-            </form>
           </div>
 
-          <form className='pt-6 flex flex-col gap-4' onSubmit={handleSubmit}>
-            <div>
-              <label>Name:</label>
-              <input
-                type='text'
-                placeholder='Enter your name'
-                name='name'
-                value={data.name}
-                onChange={handleOnChange}
-                required
-                className='w-full bg-slate-100 p-2 rounded-md outline-none'
-              />
-            </div>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter your name"
+              value={data.name}
+              onChange={handleOnChange}
+              required
+              className="border rounded-lg px-3 py-2"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter email"
+              value={data.email}
+              onChange={handleOnChange}
+              required
+              className="border rounded-lg px-3 py-2"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter password"
+              value={data.password}
+              onChange={handleOnChange}
+              required
+              className="border rounded-lg px-3 py-2"
+            />
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm password"
+              value={data.confirmPassword}
+              onChange={handleOnChange}
+              required
+              className="border rounded-lg px-3 py-2"
+            />
 
-            <div>
-              <label>Email:</label>
-              <input
-                type='email'
-                placeholder='Enter email'
-                name='email'
-                value={data.email}
-                onChange={handleOnChange}
-                required
-                className='w-full bg-slate-100 p-2 rounded-md outline-none'
-              />
-            </div>
-
-            <div>
-              <label>Password:</label>
-              <div className='relative'>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder='Enter password'
-                  name='password'
-                  value={data.password}
-                  onChange={handleOnChange}
-                  required
-                  className='w-full bg-slate-100 p-2 pr-10 rounded-md outline-none'
-                />
-                <div
-                  className='absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer text-gray-500'
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label>Confirm Password:</label>
-              <div className='relative'>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder='Confirm password'
-                  name='confirmPassword'
-                  value={data.confirmPassword}
-                  onChange={handleOnChange}
-                  required
-                  className='w-full bg-slate-100 p-2 pr-10 rounded-md outline-none'
-                />
-                <div
-                  className='absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer text-gray-500'
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                >
-                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                </div>
-              </div>
-            </div>
-
-            <button className='bg-red-600 hover:bg-red-700 text-white px-6 py-2 w-full rounded-full transition-all'>
-              Sign Up
+            <button
+              type="submit"
+              className="w-full bg-[#e53935] text-white py-3 rounded-md text-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? "Uploading..." : "Sign Up"}
             </button>
           </form>
 
-          <p className='mt-5 text-center text-sm'>
+          <p className="text-sm mt-4 text-center">
             Already have an account?{" "}
-            <Link to={"/login"} className='text-red-600 hover:text-red-700 underline'>
+            <a href="/login" className="text-blue-600">
               Login
-            </Link>
+            </a>
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
-};
+}
 
 export default SignUp;
