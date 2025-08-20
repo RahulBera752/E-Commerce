@@ -10,10 +10,13 @@ const userSlice = createSlice({
   reducers: {
     setUserDetails: (state, action) => {
       state.user = action.payload;
-      console.log('userdetails', action.payload);
+      console.log('✅ User details set:', action.payload);
     },
     logout: (state) => {
       state.user = null;
+      // ✅ Clear token on logout
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
     },
   },
 });

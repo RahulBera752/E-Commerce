@@ -1,18 +1,14 @@
-// src/App.jsx
 import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./helpers/scrollTop";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { setUserDetails } from "./store/userSlice";
 import { setCartCount } from "./store/cartSlice";
 import { SummaryApi } from "./common";
-
-
-
 
 const App = () => {
   const dispatch = useDispatch();
@@ -33,7 +29,6 @@ const App = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include", // sends cookies as well (optional)
       });
 
       const data = await response.json();
@@ -41,14 +36,16 @@ const App = () => {
       if (data.success) {
         dispatch(setUserDetails(data.data));
       } else {
-        // Token invalid
+        // Token invalid or expired
         dispatch(setUserDetails(null));
         localStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
       }
     } catch (error) {
       console.error("Error fetching user:", error);
       dispatch(setUserDetails(null));
       localStorage.removeItem("token");
+      toast.error("Failed to fetch user info. Please log in again.");
     }
   };
 
@@ -60,7 +57,6 @@ const App = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       const data = await response.json();
@@ -90,4 +86,3 @@ const App = () => {
 };
 
 export default App;
-

@@ -1,23 +1,42 @@
 import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { SummaryApi } from "../common";
-import { setCartCount } from "../store/cartSlice"; // ✅ Redux action
+import { setCartCount } from "../store/cartSlice";
 
 const Context = createContext();
 
 const ContextProvider = ({ children }) => {
   const [userAddToCart, setUserAddToCart] = useState([]);
   const [cartProductCount, setCartProductCount] = useState(0);
-  const dispatch = useDispatch(); // ✅ Redux dispatcher
+  const dispatch = useDispatch();
 
-  // ✅ Updated to use correct API: view-cart-product
+  // ✅ Updated: use JWT token from localStorage
   const fetchUserAddToCart = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUserAddToCart([]);
+        setCartProductCount(0);
+        dispatch(setCartCount(0));
+        return;
+      }
+
       const response = await fetch(SummaryApi.addToCartViewProduct.url, {
         method: SummaryApi.addToCartViewProduct.method,
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ use token
+        },
       });
+
+      if (response.status === 401) {
+        // Token expired or invalid
+        setUserAddToCart([]);
+        setCartProductCount(0);
+        dispatch(setCartCount(0));
+        localStorage.removeItem("token");
+        return;
+      }
 
       const data = await response.json();
 
@@ -32,6 +51,9 @@ const ContextProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("fetchUserAddToCart failed:", err);
+      setUserAddToCart([]);
+      setCartProductCount(0);
+      dispatch(setCartCount(0));
     }
   };
 

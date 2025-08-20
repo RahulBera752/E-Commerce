@@ -4,9 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { SummaryApi } from "../common";
 import { getUser, setUserDetails } from "../store/userSlice";
-
-// 📌 Import your logo
-import logo from "../assets/MyWebLogo.png"; // <-- adjust path to your logo
+import { setCartItems, setCartCount } from "../store/cartSlice";
+import logo from "../assets/MyWebLogo.png";
 
 function Login() {
   const navigate = useNavigate();
@@ -29,7 +28,6 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!data.email || !data.password) {
       toast.error("Please enter both email and password");
       return;
@@ -44,7 +42,6 @@ function Login() {
       setLoading(true);
       const res = await fetch(SummaryApi.signin.url, {
         method: SummaryApi.signin.method,
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -52,8 +49,38 @@ function Login() {
       const resData = await res.json();
       if (res.ok && resData.success) {
         toast.success("Login Successful!");
+
+        // ✅ Save JWT token to localStorage
         localStorage.setItem("token", resData.token);
+
+        // ✅ Save user details in Redux
         dispatch(setUserDetails(resData.data));
+
+        // ✅ Fetch user's cart
+        const token = localStorage.getItem("token");
+        try {
+          const cartRes = await fetch(SummaryApi.viewCartProduct.url, {
+            method: SummaryApi.viewCartProduct.method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // 🔑 Attach JWT here
+            },
+          });
+
+          const cartData = await cartRes.json();
+          if (cartRes.ok && cartData.success) {
+            dispatch(setCartItems(cartData.data));
+            dispatch(setCartCount(cartData.data.length));
+          } else {
+            dispatch(setCartItems([]));
+            dispatch(setCartCount(0));
+          }
+        } catch (cartErr) {
+          console.error("❌ Error fetching cart:", cartErr);
+          dispatch(setCartItems([]));
+          dispatch(setCartCount(0));
+        }
+
         navigate("/");
       } else {
         toast.error(resData.message || "Invalid email or password");
@@ -72,18 +99,14 @@ function Login() {
         <div className="flex flex-1">
           {/* Left Blue Panel */}
           <div className="hidden md:flex flex-col justify-start items-center bg-[#4a90e2] text-white w-2/5 p-12">
-            {/* Logo */}
             <img src={logo} alt="Logo" className="h-16 mb-5" />
-
-            {/* Login text */}
             <h2 className="text-3xl font-bold mb-4">Login</h2>
-
             <p className="text-base text-gray-100 text-center leading-relaxed">
               Get access to your Orders, Wishlist and Recommendations
             </p>
           </div>
 
-          {/* Right White Panel (Form) */}
+          {/* Right White Panel */}
           <div className="w-full md:w-3/5 p-12 flex items-center">
             <form onSubmit={handleSubmit} className="w-full space-y-6">
               <div>

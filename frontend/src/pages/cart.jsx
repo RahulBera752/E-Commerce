@@ -11,16 +11,28 @@ const Cart = () => {
   const context = useContext(Context);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+
   const fetchData = async () => {
+    if (!token) {
+      toast.error("Please log in to view your cart");
+      navigate("/login");
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await fetch(SummaryApi.addToCartViewProduct.url, {
         method: SummaryApi.addToCartViewProduct.method,
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 🔑 Attach JWT token
+        },
       });
 
       if (res.status === 401) {
-        toast.error("Please log in to view your cart");
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("token");
         navigate("/login");
         return;
       }
@@ -29,6 +41,7 @@ const Cart = () => {
 
       if (resData.success) {
         setData(resData.data || []);
+        context.fetchUserAddToCart?.(); // ✅ Update global cart count
       } else {
         toast.error(resData.message || "Failed to fetch cart items");
       }
@@ -51,9 +64,9 @@ const Cart = () => {
     try {
       const res = await fetch(SummaryApi.updateCartProduct.url, {
         method: SummaryApi.updateCartProduct.method,
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           _id: item._id,
@@ -63,7 +76,8 @@ const Cart = () => {
 
       const resData = await res.json();
       if (resData.success) {
-        fetchData();
+        fetchData(); // ✅ Refresh cart
+        context.fetchUserAddToCart?.(); // ✅ Sync global count
       } else {
         toast.error(resData.message || "Update failed");
       }
@@ -77,17 +91,17 @@ const Cart = () => {
     try {
       const res = await fetch(SummaryApi.deleteCartProduct.url, {
         method: SummaryApi.deleteCartProduct.method,
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ _id }),
       });
 
       const resData = await res.json();
       if (resData.success) {
-        fetchData();
-        context.fetchUserAddToCart?.();
+        fetchData(); // ✅ Refresh cart
+        context.fetchUserAddToCart?.(); // ✅ Sync global count
         toast.success("Item removed");
       } else {
         toast.error(resData.message || "Delete failed");
@@ -147,7 +161,9 @@ const Cart = () => {
                     <span className="block">
                       MRP:{" "}
                       <span className="line-through">
-                        {displayINRCurrency(prod.price || prod.sellingPrice + 100)}
+                        {displayINRCurrency(
+                          prod.price || prod.sellingPrice + 100
+                        )}
                       </span>
                     </span>
                     <span className="block">
@@ -201,9 +217,7 @@ const Cart = () => {
         </p>
         <p className="mt-2">
           Subtotal:{" "}
-          <span className="font-semibold">
-            {displayINRCurrency(subtotal)}
-          </span>
+          <span className="font-semibold">{displayINRCurrency(subtotal)}</span>
         </p>
         <p className="mt-2">
           Delivery Charges:{" "}
