@@ -86,13 +86,16 @@ const HorizontalCardProduct = ({ category: propCategory, heading }) => {
             <Link
               to={`/product/${product._id}`}
               key={product._id}
-              className="bg-white rounded-md shadow hover:shadow-lg transition flex flex-col"
+              className="bg-white rounded-md shadow-md 
+                         hover:shadow-[0_0_20px_rgba(0,255,0,0.6)] 
+                         transition transform hover:scale-105 
+                         flex flex-col duration-200 border border-green-200"
             >
               <div className="h-48 flex items-center justify-center p-2">
                 <img
                   src={product.productImage[0]}
                   alt={product.productName}
-                  className="object-contain h-full hover:scale-105 transition-transform"
+                  className="object-contain h-full hover:scale-110 transition-transform"
                 />
               </div>
               <div className="p-3">
@@ -111,7 +114,9 @@ const HorizontalCardProduct = ({ category: propCategory, heading }) => {
                   </p>
                 </div>
                 <button
-                  className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full w-full"
+                  className="text-sm bg-red-600 hover:bg-red-700 
+                             text-white px-3 py-1 rounded-full 
+                             w-full shadow-md shadow-green-400"
                   onClick={(e) => handleAddToCart(e, product._id)}
                 >
                   Add to Cart

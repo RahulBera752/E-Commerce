@@ -91,7 +91,7 @@ const ProductDetails = () => {
       if (fetchUserAddToCart) {
         fetchUserAddToCart(); // refresh cart
       }
-      toast.success("Added to cart");
+      //toast.success("Added to cart");
     } catch (err) {
       console.error("Add to cart failed:", err);
       toast.error("Failed to add product");
@@ -120,15 +120,21 @@ const ProductDetails = () => {
         {/* Product Images */}
         <div className="h-96 flex flex-col lg:flex-row-reverse gap-4">
           <div className="h-[300px] w-[300px] lg:h-96 lg:w-96 bg-slate-200 relative p-2">
-            <img
-              src={activeImage}
-              className="h-full w-full object-scale-down mix-blend-multiply"
-              onMouseMove={handleZoomImage}
-              onMouseLeave={handleLeaveImageZoom}
-              alt="product"
-            />
+            {activeImage ? (
+              <img
+                src={activeImage}
+                className="h-full w-full object-scale-down mix-blend-multiply"
+                onMouseMove={handleZoomImage}
+                onMouseLeave={handleLeaveImageZoom}
+                alt={data?.productName || "product"}
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-slate-400">
+                No Image
+              </div>
+            )}
 
-            {zoomImage && (
+            {zoomImage && activeImage && (
               <div className="hidden lg:block absolute min-w-[500px] overflow-hidden min-h-[400px] bg-slate-200 p-1 -right-[510px] top-0">
                 <div
                   className="w-full h-full min-h-[400px] min-w-[500px] mix-blend-multiply scale-150"
@@ -152,10 +158,10 @@ const ProductDetails = () => {
                       loading ? "animate-pulse bg-slate-200" : "bg-slate-200 p-1"
                     } rounded`}
                   >
-                    {!loading && (
+                    {!loading && img && (
                       <img
                         src={img}
-                        alt=""
+                        alt={data?.productName || `thumbnail-${index}`}
                         className="w-full h-full object-scale-down mix-blend-multiply cursor-pointer"
                         onMouseEnter={() => handleMouseEnterProduct(img)}
                         onClick={() => handleMouseEnterProduct(img)}

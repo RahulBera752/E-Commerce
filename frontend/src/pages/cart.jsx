@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SummaryApi } from "../common";
 import { toast } from "react-toastify";
-import displayINRCurrency from "../helpers/displayCurrency";
+import { SummaryApi } from "../common";
 import { Context } from "../context";
+import displayINRCurrency from "../helpers/displayCurrency";
 
 const Cart = () => {
   const [data, setData] = useState([]);
@@ -26,7 +26,7 @@ const Cart = () => {
         method: SummaryApi.addToCartViewProduct.method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔑 Attach JWT token
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -41,7 +41,7 @@ const Cart = () => {
 
       if (resData.success) {
         setData(resData.data || []);
-        context.fetchUserAddToCart?.(); // ✅ Update global cart count
+        context.fetchUserAddToCart?.();
       } else {
         toast.error(resData.message || "Failed to fetch cart items");
       }
@@ -76,8 +76,9 @@ const Cart = () => {
 
       const resData = await res.json();
       if (resData.success) {
-        fetchData(); // ✅ Refresh cart
-        context.fetchUserAddToCart?.(); // ✅ Sync global count
+        fetchData();
+        context.fetchUserAddToCart?.();
+        toast.success("Quantity updated ✅");
       } else {
         toast.error(resData.message || "Update failed");
       }
@@ -100,9 +101,9 @@ const Cart = () => {
 
       const resData = await res.json();
       if (resData.success) {
-        fetchData(); // ✅ Refresh cart
-        context.fetchUserAddToCart?.(); // ✅ Sync global count
-        toast.success("Item removed");
+        fetchData();
+        context.fetchUserAddToCart?.();
+        toast.success("Item removed 🗑️");
       } else {
         toast.error(resData.message || "Delete failed");
       }
@@ -135,7 +136,7 @@ const Cart = () => {
         ) : data.length === 0 ? (
           <p className="text-center text-gray-600">Your cart is empty</p>
         ) : (
-          data.map((product, index) => {
+          [...data].reverse().map((product, index) => {
             const prod = product?.productId;
             if (!prod) return null;
 
@@ -144,13 +145,18 @@ const Cart = () => {
             return (
               <div
                 key={product._id || index}
-                className="w-full bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4"
+                className="w-full bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4 
+                transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer hover:shadow-lg"
+                onClick={() => {
+                  toast.info(`${prod.productName} selected 🛒`);
+                  navigate(`/product/${prod._id}`); // ✅ Navigate to product details
+                }}
               >
-                <div className="w-full md:w-2/12">
+                <div className="w-full md:w-2/12 flex items-center justify-center">
                   <img
                     src={prod.productImage?.[0]}
                     alt={prod.productName}
-                    className="w-full h-full object-scale-down"
+                    className="w-full h-full object-scale-down rounded"
                   />
                 </div>
 
@@ -171,17 +177,23 @@ const Cart = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-2 gap-2">
                     <button
-                      onClick={() => handleQuantity("dec", product)}
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuantity("dec", product);
+                      }}
+                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded transition"
                     >
                       -
                     </button>
                     <span className="px-4">{product.quantity}</span>
                     <button
-                      onClick={() => handleQuantity("inc", product)}
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuantity("inc", product);
+                      }}
+                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded transition"
                     >
                       +
                     </button>
@@ -195,8 +207,11 @@ const Cart = () => {
                   </p>
 
                   <button
-                    onClick={() => handleDelete(product._id)}
-                    className="mt-2 text-sm text-red-600 hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(product._id);
+                    }}
+                    className="mt-2 text-sm text-red-600 hover:text-red-800 hover:underline active:scale-95 transition"
                   >
                     Remove
                   </button>
@@ -233,8 +248,11 @@ const Cart = () => {
         </p>
 
         <button
-          onClick={() => navigate("/order")}
-          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+          onClick={() => {
+            toast.success("Proceeding to Payment 💳");
+            navigate("/order");
+          }}
+          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-95 transition text-white py-2 rounded"
         >
           Payment
         </button>

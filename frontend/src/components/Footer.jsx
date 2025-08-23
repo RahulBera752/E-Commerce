@@ -138,7 +138,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center text-gray-600">
           <p>© 2025 GhoroaStore.com</p>
           <div className="flex flex-wrap gap-4 justify-center sm:justify-end">
-            <Link to="/become-seller" className="hover:underline">
+            {/*<Link to="/become-seller" className="hover:underline">
               Become a Seller
             </Link>
             <Link to="/advertise" className="hover:underline">
@@ -146,7 +146,7 @@ const Footer = () => {
             </Link>
             <Link to="/gift-card" className="hover:underline">
               Gift Cards
-            </Link>
+            </Link>*/}
             <Link to="/help-center" className="hover:underline">
               Help Center
             </Link>

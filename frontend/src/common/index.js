@@ -27,7 +27,14 @@ export const SummaryApi = {
     url: `${BASE_URL}/api/user/change-role`,
     method: "PATCH",
   },
-
+  forgotPassword: {
+  url: `${BASE_URL}/api/user/forgot-password`,
+  method: "POST",
+},
+resetPassword: {
+  url: `${BASE_URL}/api/user/reset-password`,
+  method: "POST",
+},
   // ✅ Product APIs
   all_products: {
     url: `${BASE_URL}/api/product/all-products`,

@@ -41,9 +41,7 @@ const VerticalCardProduct = ({
   return (
     <div className="container mx-auto px-4 my-6">
       {heading && (
-        <h2 className="text-2xl font-semibold py-4">
-          {heading}
-        </h2>
+        <h2 className="text-2xl font-semibold py-4">{heading}</h2>
       )}
 
       {scrollable ? (
@@ -54,7 +52,10 @@ const VerticalCardProduct = ({
               <Link
                 key={product?._id || index}
                 to={product?._id ? `/product/${product._id}` : "#"}
-                className="min-w-[200px] bg-white rounded shadow p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
+                className="min-w-[220px] bg-white rounded-lg p-4 flex flex-col gap-3
+                  shadow-md border border-gray-200
+                  hover:shadow-[0_0_15px_rgba(34,197,94,0.7)] hover:border-green-400
+                  transition-all duration-300 ease-in-out"
               >
                 <div className="h-48 flex justify-center items-center">
                   {loading ? (
@@ -62,8 +63,8 @@ const VerticalCardProduct = ({
                   ) : (
                     <img
                       src={product?.productImage?.[0] || "/no-image.png"}
-                      alt={product.productName}
-                      className="object-contain h-full w-full hover:scale-105 transition-transform duration-200 ease-in-out mix-blend-multiply"
+                      alt={product?.productName}
+                      className="object-contain h-full w-full hover:scale-105 transition-transform duration-200 ease-in-out"
                     />
                   )}
                 </div>
@@ -80,21 +81,25 @@ const VerticalCardProduct = ({
                     <h2 className="font-medium text-base md:text-lg text-black line-clamp-1">
                       {product.productName}
                     </h2>
-                    <p className="capitalize text-red-600 font-semibold">
-                      Category: {product.category || "N/A"}
+                    <p className="text-gray-600 text-sm">
+                      Category: <span className="capitalize">{product.category || "N/A"}</span>
                     </p>
-                    <div className="flex gap-3">
-                      <p className="text-red-600 font-medium">
+                    <div className="flex gap-3 items-center">
+                      <p className="text-red-600 font-bold">
                         {displayINRCurrency(product.sellingPrice || 0)}
                       </p>
                       {product.price && (
-                        <p className="text-slate-500 line-through">
+                        <p className="text-slate-500 line-through text-sm">
                           {displayINRCurrency(product.price)}
                         </p>
                       )}
                     </div>
                     <button
-                      className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+                      className="text-sm bg-red-600 hover:bg-red-700 
+                                text-white px-3 py-1.5 rounded-full 
+                                shadow-md shadow-green-500/70 
+                                hover:shadow-green-600/80
+                                transition-all"
                       onClick={(e) => handleAddToCart(e, product._id)}
                     >
                       Add to Cart
@@ -112,7 +117,8 @@ const VerticalCardProduct = ({
             ? loadingList.map((_, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded shadow p-4 animate-pulse space-y-3"
+                  className="bg-white rounded-lg p-4 animate-pulse space-y-3
+                    shadow-md border border-gray-200"
                 >
                   <div className="bg-slate-200 h-48 rounded" />
                   <div className="h-5 bg-slate-200 rounded w-3/4" />
@@ -128,13 +134,16 @@ const VerticalCardProduct = ({
                 <Link
                   key={product._id}
                   to={`/product/${product._id}`}
-                  className="bg-white rounded shadow p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg p-4 flex flex-col gap-3
+                    shadow-md border border-gray-200
+                    hover:shadow-[0_0_15px_rgba(34,197,94,0.7)] hover:border-green-400
+                    transition-all duration-300 ease-in-out"
                 >
                   <div className="h-48 flex justify-center items-center">
                     <img
                       src={product?.productImage?.[0] || "/no-image.png"}
                       alt={product.productName}
-                      className="object-contain h-full w-full hover:scale-105 transition-transform duration-200 ease-in-out mix-blend-multiply"
+                      className="object-contain h-full w-full hover:scale-105 transition-transform duration-200 ease-in-out"
                     />
                   </div>
 
@@ -142,23 +151,27 @@ const VerticalCardProduct = ({
                     {product.productName}
                   </h2>
 
-                  <p className="capitalize text-red-600 font-semibold">
-                    Category: {product.category || "N/A"}
+                  <p className="text-gray-600 text-sm">
+                    Category: <span className="capitalize">{product.category || "N/A"}</span>
                   </p>
 
-                  <div className="flex gap-3">
-                    <p className="text-red-600 font-medium">
+                  <div className="flex gap-3 items-center">
+                    <p className="text-red-600 font-bold">
                       {displayINRCurrency(product.sellingPrice || 0)}
                     </p>
                     {product.price && (
-                      <p className="text-slate-500 line-through">
+                      <p className="text-slate-500 line-through text-sm">
                         {displayINRCurrency(product.price)}
                       </p>
                     )}
                   </div>
 
                   <button
-                    className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full"
+                    className="text-sm bg-red-600 hover:bg-red-700 
+                               text-white px-3 py-1.5 rounded-full 
+                               shadow-md shadow-green-500/70 
+                               hover:shadow-green-600/80
+                               transition-all"
                     onClick={(e) => handleAddToCart(e, product._id)}
                   >
                     Add to Cart

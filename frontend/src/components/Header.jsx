@@ -96,6 +96,7 @@ const Header = () => {
     if (search.trim()) {
       navigate(`/search?query=${encodeURIComponent(search.trim())}`);
       setSuggestions([]);
+      setSearch(''); // ✅ clear input after search
     }
   };
 
@@ -105,7 +106,7 @@ const Header = () => {
 
   const handleSuggestionClick = (text) => {
     navigate(`/search?query=${encodeURIComponent(text)}`);
-    setSearch(text);
+    setSearch(''); // ✅ clear input after selecting suggestion
     setSuggestions([]);
   };
 

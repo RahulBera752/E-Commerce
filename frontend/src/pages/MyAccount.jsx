@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { SummaryApi } from "../common";
 import { toast } from "react-toastify";
 import { Link, useLocation } from "react-router-dom";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 const MyAccount = () => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +11,7 @@ const MyAccount = () => {
 
   const authHeaders = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
   };
 
   const loadData = async () => {
@@ -37,7 +35,9 @@ const MyAccount = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Utility to highlight active link
   const navLinkClasses = (path) =>
@@ -49,7 +49,6 @@ const MyAccount = () => {
 
   return (
     <div className="flex max-w-6xl mx-auto mt-8 min-h-[80vh] bg-[#F5F5F5] rounded-xl overflow-hidden shadow-lg">
-      
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#ddd]">
         <div className="p-5 border-b border-[#ddd]">
@@ -61,16 +60,11 @@ const MyAccount = () => {
           <Link to="/my-orders" className={navLinkClasses("/my-orders")}>
             My Orders
           </Link>
-          <div className="px-5 py-2 font-semibold text-[#777] uppercase text-xs bg-[#FAFAFA]">Account Settings</div>
+          <div className="px-5 py-2 font-semibold text-[#777] uppercase text-xs bg-[#FAFAFA]">
+            Account Settings
+          </div>
           <Link to="/account" className={navLinkClasses("/account")}>
             Profile Information
-          </Link>
-          <Link to="/account/addresses" className={navLinkClasses("/account/addresses")}>
-            Manage Addresses
-          </Link>
-          <div className="px-5 py-2 font-semibold text-[#777] uppercase text-xs bg-[#FAFAFA]">Payments</div>
-          <Link to="/account/saved-cards" className={navLinkClasses("/account/saved-cards")}>
-            Saved Cards
           </Link>
         </nav>
       </aside>
@@ -87,28 +81,43 @@ const MyAccount = () => {
                 Personal Information
               </h2>
               <div className="grid md:grid-cols-2 gap-6 text-[#555]">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium uppercase text-[#999]">Name</p>
-                  <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
-                    {profile.name || "-"}
-                  </p>
+                <div className="space-y-1 relative">
+                  <span className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l"></span>
+                  <div className="pl-3">
+                    <p className="text-xs font-medium uppercase text-[#999]">
+                      Name
+                    </p>
+                    <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
+                      {profile.name || "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium uppercase text-[#999]">Email</p>
-                  <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
-                    {profile.email || "-"}
-                  </p>
+                <div className="space-y-1 relative">
+                  <span className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l"></span>
+                  <div className="pl-3">
+                    <p className="text-xs font-medium uppercase text-[#999]">
+                      Email
+                    </p>
+                    <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
+                      {profile.email || "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium uppercase text-[#999]">Mobile</p>
-                  <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
-                    {profile.phone || "-"}
-                  </p>
+                <div className="space-y-1 relative">
+                  <span className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l"></span>
+                  <div className="pl-3">
+                    <p className="text-xs font-medium uppercase text-[#999]">
+                      Mobile
+                    </p>
+                    <p className="p-3 border border-[#ddd] rounded-lg bg-[#FAFAFA] shadow-sm">
+                      {profile.phone || "-"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
 
-            {/* Addresses */}
+            {/* Addresses Section */}
             <section>
               <h2 className="text-xl font-semibold text-black border-b border-[#eee] pb-3 mb-5">
                 Saved Addresses
@@ -130,8 +139,12 @@ const MyAccount = () => {
                           </span>
                         )}
                       </p>
-                      <p className="text-[#555] mt-1">{a.line1}, {a.city}, {a.state} - {a.pin}</p>
-                      {a.phone && <p className="text-[#555] mt-1">Phone: {a.phone}</p>}
+                      <p className="text-[#555] mt-1">
+                        {a.line1}, {a.city}, {a.state} - {a.pin}
+                      </p>
+                      {a.phone && (
+                        <p className="text-[#555] mt-1">Phone: {a.phone}</p>
+                      )}
                     </div>
                   ))}
                 </div>

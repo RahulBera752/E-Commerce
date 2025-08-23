@@ -66,13 +66,17 @@ const AdminEditProduct = ({ onClose, productData, fetchData }) => {
     }
 
     try {
-      const { url, method } = SummaryApi.updateProduct(data._id); // ✅ FIXED usage
+      const { url, method } = SummaryApi.updateProduct(data._id);
+
+      // ✅ FIX: Attach token from localStorage/sessionStorage
+      const token = localStorage.getItem("token"); 
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // ✅ Send token
         },
-        credentials: 'include',
         body: JSON.stringify({
           productName: data.productName,
           brandName: data.brandName,

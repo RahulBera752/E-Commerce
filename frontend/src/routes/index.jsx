@@ -16,6 +16,8 @@ import Order from "../pages/OrderPage";
 import OrderSuccess from "../pages/OrderSuccess";
 import MyAccount from "../pages/MyAccount";
 import MyOrders from "../pages/MyOrders";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 // 🆕 Footer pages
 import AboutUs from "../pages/AboutUs";
@@ -37,6 +39,8 @@ const router = createBrowserRouter([
       { path: "", element: <Home /> },
       { path: "login", element: <Login /> },
       { path: "sign-up", element: <SignUp /> },
+      { path: "reset-password", element: <ResetPassword /> },
+      { path: "forgot-password", element: <ForgotPassword /> },
       {
         path: "admin-panel",
         element: <AdminPanel />,
@@ -54,7 +58,6 @@ const router = createBrowserRouter([
       { path: "order-success", element: <OrderSuccess /> },
       { path: "account", element: <MyAccount /> },
       { path: "my-orders", element: <MyOrders /> },
-
       // 🆕 Footer routes
       { path: "about-us", element: <AboutUs /> },
       { path: "contact-us", element: <ContactUs /> },

@@ -5,18 +5,30 @@ const getallOrdersController = async (req, res) => {
   try {
     const orders = await orderModel
       .find()
-      .populate("user") // ✅ FIXED: this must match schema field name
+      .populate("user")
       .populate("items.productId");
 
     res.json({
       success: true,
-      data: orders,
+      data: orders.map((order) => {
+        const obj = order.toObject();
+
+        return {
+          ...obj,
+          total: obj.total,                  // ✅ total before discount
+          discount: obj.discount,            // ✅ discount applied
+          finalAmount: obj.finalAmount,      // ✅ total after discount
+          coupon: obj.coupon || null,        // ✅ coupon details
+          probableDeliveryDate: obj.probableDeliveryDate || null,
+        };
+      }),
     });
   } catch (error) {
     console.error("❌ getallOrdersController error:", error);
-    res.json({
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch orders",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

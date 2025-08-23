@@ -9,10 +9,12 @@ import authToken from "../middleware/authToken.js";
 import placeOrderController from "../controller/user/placeOrder.js";
 import orderController from "../controller/user/getMyOrdersController.js";
 import getallOrdersController from "../controller/user/getAllOrdersController.js";
-import updateOrderStatusController from "../controller/product/updateOrderStatusController.js";
+import updateOrderStatusController from "../controller/user/updateOrderStatusController.js";
 import getAddresses from "../controller/user/getAddresses.js";
 import addAddress from "../controller/user/addAddress.js";
 import setDefaultAddress from "../controller/user/setDefaultAddress.js";
+import { forgotPasswordController } from "../controller/user/forgetPassword.js";
+import { resetPasswordController } from "../controller/user/resetPassword.js";
 
 // Product Controllers
 import addProduct from "../controller/product/addProduct.js";
@@ -34,6 +36,10 @@ import { razorpayOrderController } from "../controller/payment/razorpayOrderCont
 
 const router = express.Router();
 
+// 🟢 Forgot / Reset Password Routes
+router.post("/forgot-password", forgotPasswordController);
+router.post("/reset-password", resetPasswordController);
+
 // User Routes
 router.post("/signup", userSignUpController);
 router.post("/signin", userSignInController);
@@ -42,7 +48,7 @@ router.get("/userLogout", authToken, userLogoutController);
 router.get("/all-users", authToken, getAllUsersController);
 router.patch("/change-role", authToken, changeUserRole);
 router.get("/all-orders", authToken, getallOrdersController);
-router.patch("/update-order-status/:id", authToken, updateOrderStatusController);
+router.patch("/update-order-status/:orderId", updateOrderStatusController);
 
 // Address Book
 router.get("/addresses", authToken, getAddresses);

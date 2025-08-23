@@ -20,6 +20,10 @@ const Order = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
+  // ✅ Coupon States
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+
   const tokenHeader = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -39,7 +43,6 @@ const Order = () => {
           toast.error(err.message || "Failed to load product");
         }
       } else {
-        // original cart fetch
         fetchCartItems();
       }
     };
@@ -107,6 +110,17 @@ const Order = () => {
     return isValid;
   };
 
+  // ✅ Apply Coupon
+  const handleApplyCoupon = () => {
+    if (couponCode.trim().toUpperCase() === "RAHUL18") {
+      setDiscount(100);
+      toast.success("Coupon applied! ₹100 off");
+    } else {
+      setDiscount(0);
+      toast.error("Invalid coupon code");
+    }
+  };
+
   const handlePlaceOrder = async () => {
     setIsLoading(true);
     setValidationErrors({});
@@ -118,16 +132,23 @@ const Order = () => {
       const orderItems = cartItems.map((item) => ({
         productId: item.productId._id,
         quantity: item.quantity,
-        price: item.productId.sellingPrice,
       }));
 
+      // ✅ Corrected payload (matches backend schema)
       const payload = {
         name: user.name,
         phone: phone.trim(),
         address: `${address.trim()}, Landmark: ${landmark.trim()}, PIN: ${pinCode.trim()}`,
         items: orderItems,
-        paymentMode: paymentMethod,
-        total,
+        paymentMethod,
+        grossTotal: total,                   // ✅ backend expects grossTotal
+        discount: discount,                  // ✅ backend expects discount
+        finalAmount: total - discount,       // ✅ backend expects finalAmount
+        coupon: discount > 0 ? {
+          code: couponCode.toUpperCase(),
+          discountType: "FLAT",
+          discountValue: discount
+        } : null
       };
 
       if (paymentMethod === "COD") {
@@ -172,10 +193,11 @@ const Order = () => {
     const loaded = await loadRazorpayScript();
     if (!loaded) throw new Error("Failed to load Razorpay SDK");
 
+    // ✅ use finalAmount (discount applied)
     const orderRes = await fetch("http://localhost:8080/api/payment/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: orderPayload.total }),
+      body: JSON.stringify({ amount: orderPayload.finalAmount, currency: "INR" }),
     });
 
     const data = await orderRes.json();
@@ -197,7 +219,7 @@ const Order = () => {
 
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
-          await placeFinalOrder({ ...orderPayload, paymentMode: "ONLINE" });
+          await placeFinalOrder({ ...orderPayload, paymentMethod: "ONLINE" });
         } else {
           throw new Error("Payment verification failed");
         }
@@ -291,8 +313,30 @@ const Order = () => {
               </li>
             ))}
           </ul>
+
+          {/* ✅ Coupon Input */}
+          <div className="flex mb-4">
+            <input
+              type="text"
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              className="w-full border rounded-l px-3 py-2"
+            />
+            <button
+              onClick={handleApplyCoupon}
+              className="bg-green-600 text-white px-4 rounded-r hover:bg-green-700 transition"
+            >
+              Apply
+            </button>
+          </div>
+
+          {discount > 0 && (
+            <div className="text-green-600 font-medium mb-2">Discount Applied: -₹{discount}</div>
+          )}
+
           <div className="text-right font-semibold text-lg mb-4">
-            Total: ₹{total.toFixed(2)}
+            Total: ₹{(total - discount).toFixed(2)}
           </div>
 
           <div className="mb-4">

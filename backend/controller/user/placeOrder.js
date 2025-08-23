@@ -8,62 +8,51 @@ const placeOrderController = async (req, res) => {
   try {
     session.startTransaction();
 
-    const { name, phone, address, items, paymentMethod, total } = req.body;
+    const {
+      name,
+      phone,
+      address,
+      items,
+      paymentMethod,
+      total, // client-side final amount
+      couponCode,
+      discountType,
+      discountValue,
+    } = req.body;
 
-    // ✅ Ensure user is authenticated
     if (!req.userId) {
       await session.abortTransaction();
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Missing user ID",
-      });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // ✅ Validate fields
     if (!items?.length) {
       await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Cart is empty",
-      });
+      return res.status(400).json({ success: false, message: "Cart is empty" });
     }
 
     if (!name || !phone || !address) {
       await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     const orderItems = [];
     let calculatedTotal = 0;
 
-    // ✅ Validate and build each product entry
     for (const item of items) {
       if (!item.productId || !item.quantity || item.quantity <= 0) {
         await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: "Invalid cart items",
-        });
+        return res.status(400).json({ success: false, message: "Invalid cart items" });
       }
 
       const product = await productModel.findById(item.productId).session(session);
       if (!product) {
         await session.abortTransaction();
-        return res.status(404).json({
-          success: false,
-          message: `Product not found: ${item.productId}`,
-        });
+        return res.status(404).json({ success: false, message: `Product not found: ${item.productId}` });
       }
 
       if (product.stock < item.quantity) {
         await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${product.productName}`,
-        });
+        return res.status(400).json({ success: false, message: `Insufficient stock for ${product.productName}` });
       }
 
       product.stock -= item.quantity;
@@ -81,27 +70,24 @@ const placeOrderController = async (req, res) => {
       });
     }
 
-    // ✅ Check for total mismatch
-    if (Math.abs(calculatedTotal - total) > 0.01) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Total amount mismatch",
-      });
+    // ✅ Calculate discount
+    let discountApplied = 0;
+    if (couponCode && discountType && discountValue) {
+      if (discountType === "PERCENT") {
+        discountApplied = (calculatedTotal * discountValue) / 100;
+      } else if (discountType === "FLAT") {
+        discountApplied = discountValue;
+      }
     }
 
-    // ✅ Log data before saving
-    console.log("🧾 Creating order with:", {
-      user: req.userId,
-      name,
-      phone,
-      address,
-      items: orderItems,
-      paymentMethod,
-      total: calculatedTotal,
-    });
+    const finalAmount = Math.max(0, calculatedTotal - discountApplied);
 
-    // ✅ Create the order
+    if (Math.abs(finalAmount - total) > 0.01) {
+      await session.abortTransaction();
+      return res.status(400).json({ success: false, message: "Total mismatch" });
+    }
+
+    // ✅ Save order with correct schema fields
     const order = new Order({
       user: req.userId,
       name,
@@ -109,7 +95,12 @@ const placeOrderController = async (req, res) => {
       address,
       items: orderItems,
       paymentMethod: paymentMethod || "COD",
-      total: calculatedTotal,
+      grossTotal: calculatedTotal,     // ✅ matches schema
+      discount: discountApplied,       // ✅ matches schema
+      finalAmount: finalAmount,        // ✅ matches schema
+      coupon: couponCode
+        ? { code: couponCode, discountType, discountValue }
+        : null,
       status: "PLACED",
     });
 
@@ -120,19 +111,16 @@ const placeOrderController = async (req, res) => {
       success: true,
       message: "Order placed successfully",
       orderId: order._id,
-      orderTotal: order.total,
+      grossTotal: order.grossTotal,
+      discountApplied: order.discount,
+      finalAmount: order.finalAmount,
+      coupon: order.coupon,
     });
 
   } catch (error) {
     await session.abortTransaction();
-    console.error("🔥 ORDER ERROR STACK TRACE:");
-    console.error(error?.stack || error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to place order",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    console.error("🔥 ORDER ERROR:", error);
+    return res.status(500).json({ success: false, message: error.message });
   } finally {
     session.endSession();
   }

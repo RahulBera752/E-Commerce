@@ -4,6 +4,12 @@ import { toast } from "react-toastify";
 import moment from "moment";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import MyWebLogo from "../assets/MyWebLogo.png";
+
+const calculateDistanceKm = (pin1, pin2) => {
+  if (!pin1 || !pin2) return 0;
+  return Math.abs(parseInt(pin1) - parseInt(pin2)) * 10;
+};
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -88,41 +94,57 @@ const MyOrders = () => {
 
   const generateInvoice = (order) => {
     try {
-      const doc = new jsPDF();
+      // calculate totals if backend didn’t send
+      const grossTotal = order.items.reduce(
+        (acc, item) =>
+          acc +
+          (item.quantity || 1) *
+            (item.sellingPrice || item.productId?.sellingPrice || 0),
+        0
+      );
+      const discount = order.discount || 0;
+      const finalAmount = grossTotal - discount;
 
-      // Invoice header
+      const doc = new jsPDF();
+      doc.addImage(MyWebLogo, "PNG", 10, 10, 30, 30);
       doc.setFontSize(20);
       doc.setTextColor(40, 40, 40);
       doc.text("INVOICE", 105, 20, { align: "center" });
-
-      // Company info
 
       doc.setFontSize(18);
       doc.setFont("times", "bold");
       doc.text("GhoroaStore", 105, 30, { align: "center" });
       doc.setFontSize(10);
-      doc.text("Policepara,Garia", 105, 35, { align: "center" });
-      doc.text("Kolkta, West Bengal 700152", 105, 40, { align: "center" });
+      doc.text("Policepara, Garia", 105, 35, { align: "center" });
+      doc.text("Kolkata, West Bengal 700152", 105, 40, { align: "center" });
 
-      // Invoice details
       doc.setFontSize(12);
       doc.text(`Invoice #: ${order._id}`, 14, 60);
-      doc.text(`Order Date: ${moment(order.createdAt).format("MMMM D, YYYY")}`, 14, 70);
+      doc.text(
+        `Order Date: ${moment(order.createdAt).format("MMMM D, YYYY")}`,
+        14,
+        70
+      );
 
-      // Customer info
       doc.text(`Bill To: ${order.name}`, 14, 85);
-      doc.text(`${order.address}`, 14, 95);
-      doc.text(`Phone: ${order.phone}`, 14, 105);
+      doc.text(`Phone: ${order.phone}`, 14, 95);
+      doc.text(`${order.address}`, 14, 105);
 
-      // Items table
       autoTable(doc, {
         startY: 120,
         head: [["Description", "Qty", "Price", "Amount"]],
         body: order.items.map((item) => [
           item.productName || item.productId?.productName || "Product",
           item.quantity || 1,
-          `Rs. ${(item.sellingPrice?.toFixed(2) || item.productId?.sellingPrice?.toFixed(2) || "0.00")}`,
-          `Rs. ${((item.quantity || 1) * (item.sellingPrice || item.productId?.sellingPrice || 0)).toFixed(2)}`,
+          `Rs. ${
+            item.sellingPrice?.toFixed(2) ||
+            item.productId?.sellingPrice?.toFixed(2) ||
+            "0.00"
+          }`,
+          `Rs. ${(
+            (item.quantity || 1) *
+            (item.sellingPrice || item.productId?.sellingPrice || 0)
+          ).toFixed(2)}`,
         ]),
         headStyles: {
           fillColor: [41, 128, 185],
@@ -138,22 +160,33 @@ const MyOrders = () => {
         margin: { top: 120 },
       });
 
-      // Total section
       const finalY = doc.lastAutoTable.finalY + 15;
       doc.setFontSize(12);
       doc.setFont(undefined, "bold");
-      doc.text(`Subtotal: Rs. ${order.total?.toFixed(2) || "0.00"}`, 150, finalY);
+      doc.text(`Subtotal: Rs. ${grossTotal.toFixed(2)}`, 150, finalY);
 
+      if (order.coupon) {
+        doc.text(
+          `Coupon (${order.coupon.code}): -Rs. ${discount.toFixed(2)}`,
+          150,
+          finalY + 10
+        );
+      }
 
-      // Footer
+      doc.text(
+        `Final Amount: Rs. ${finalAmount.toFixed(2)}`,
+        150,
+        finalY + (order.coupon ? 20 : 10)
+      );
+
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text("Thank you For Visiting", 105, finalY + 20, { align: "center" });
-      doc.text("Contact RS store: 033-4798245", 105, finalY + 25, { align: "center" });
+      doc.text("Thank you For Visiting", 105, finalY + 40, { align: "center" });
+      doc.text("Contact GhoroaStore: 033-98654422", 105, finalY + 45, {
+        align: "center",
+      });
 
-      // Save the PDF
       doc.save(`invoice_${order._id}_${moment().format("YYYYMMDD")}.pdf`);
-
       toast.success("Invoice downloaded successfully");
     } catch (error) {
       console.error("Invoice generation error:", error);
@@ -237,97 +270,169 @@ const MyOrders = () => {
         ) : (
           <>
             <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order._id} className="border rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 border-b flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <p className="text-xs text-gray-500">Order #</p>
-                      <p className="font-medium text-sm">{order._id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Order Date</p> {}
-                      <p className="text-sm">{formatDate(order.createdAt)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Total</p>
-                      <p className="font-medium text-sm">Rs. {order.total?.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Status</p>
-                      <div className="mt-1">{getStatusBadge(order.status)}</div>
-                    </div>
-                  </div>
+              {orders.map((order) => {
+                // calculate totals dynamically
+                const grossTotal = order.items?.reduce(
+                  (acc, item) =>
+                    acc +
+                    (item.quantity || 1) *
+                      (item.sellingPrice || item.productId?.sellingPrice || 0),
+                  0
+                );
+                const discount = order.discount || 0;
+                const finalAmount = grossTotal - discount;
 
-                  {/* Items */}
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">Items</h3>
-                    <div className="space-y-3">
-                      {order.items?.map((item, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded overflow-hidden">
-                            <img
-                              src={
-                                item.productImage?.[0] ||
-                                item.productId?.productImage?.[0] ||
-                                "/placeholder.png"
-                              }
-                              alt={
-                                item.productName ||
-                                item.productId?.productName ||
-                                "Product"
-                              }
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src = "/placeholder.png";
-                              }}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">
-                              {item.productName ||
-                                item.productId?.productName ||
-                                "Unknown Product"}
+                const borderColor =
+                  order.status === "CANCELLED"
+                    ? "border-red-500 hover:shadow-red-500/50"
+                    : "border-green-500 hover:shadow-green-500/50";
+
+                return (
+                  <div
+                    key={order._id}
+                    className={`border-2 ${borderColor} rounded-lg overflow-hidden shadow-lg transition transform hover:scale-[1.02] duration-300`}
+                  >
+                    <div className="bg-gray-50 px-4 py-3 border-b flex flex-wrap justify-between items-center gap-2">
+                      <div>
+                        <p className="text-xs text-gray-500">Order #</p>
+                        <p className="font-medium text-sm">{order._id}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Order Date</p>
+                        <p className="text-sm">{formatDate(order.createdAt)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Amount</p>
+                        <div className="text-sm">
+                          {order.coupon && discount > 0 ? (
+                            <>
+                              <p className="text-gray-600 line-through decoration-red-500 decoration-2">
+                                Rs. {grossTotal.toFixed(2)}
+                              </p>
+                              <p className="text-green-600 text-xs">
+                                -Rs. {discount.toFixed(2)}{" "}
+                                {order.coupon?.code
+                                  ? `(Coupon: ${order.coupon.code})`
+                                  : ""}
+                              </p>
+                              <p className="font-bold text-black">
+                                Rs. {finalAmount.toFixed(2)}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="font-bold text-black">
+                              Rs. {finalAmount.toFixed(2)}
                             </p>
-                            <p className="text-xs text-gray-600">
-                              Qty: {item.quantity} × Rs.
-                              {item.sellingPrice?.toFixed(2) ||
-                                item.productId?.sellingPrice?.toFixed(2) ||
-                                "0.00"}
-                            </p>
-                          </div>
-                          <div className="text-sm font-medium">
-                            Rs.
-                            {(
-                              (item.quantity || 1) *
-                              (item.sellingPrice || item.productId?.sellingPrice || 0)
-                            ).toFixed(2)}
-                          </div>
+                          )}
                         </div>
-                      ))}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Status</p>
+                        <div className="mt-1">{getStatusBadge(order.status)}</div>
+                      </div>
+                    </div>
+
+                    {/* Delivery info */}
+                    {order.status !== "CANCELLED" && (
+                      <>
+                        {order.status === "DELIVERED" ? (
+                          <div className="px-4 py-3 border-b bg-green-50">
+                            <p className="text-sm text-green-700 font-medium">
+                              ✅ Delivered on{" "}
+                              {moment(order.deliveredAt || order.updatedAt).format(
+                                "MMMM Do YYYY, h:mm A"
+                              )}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="px-4 py-3 border-b bg-green-50">
+                            <p className="text-sm text-green-700 font-medium">
+                              📅{" "}
+                              {order.probableDeliveryDate
+                                ? `Expected Delivery: ${moment(
+                                    order.probableDeliveryDate
+                                  ).format("MMMM Do YYYY")}`
+                                : "⏳ Waiting for admin to update delivery date..."}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Items */}
+                    <div className="p-4">
+                      <h3 className="font-medium mb-2">Items</h3>
+                      <div className="space-y-3">
+                        {order.items?.map((item, index) => (
+                          <div key={index} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                              <img
+                                src={
+                                  item.productImage?.[0] ||
+                                  item.productId?.productImage?.[0] ||
+                                  "/placeholder.png"
+                                }
+                                alt={
+                                  item.productName ||
+                                  item.productId?.productName ||
+                                  "Product"
+                                }
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = "/placeholder.png";
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                {item.productName ||
+                                  item.productId?.productName ||
+                                  "Unknown Product"}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                Qty: {item.quantity} × Rs.
+                                {item.sellingPrice?.toFixed(2) ||
+                                  item.productId?.sellingPrice?.toFixed(2) ||
+                                  "0.00"}
+                              </p>
+                            </div>
+                            <div className="text-sm font-medium">
+                              Rs.
+                              {(
+                                (item.quantity || 1) *
+                                (item.sellingPrice ||
+                                  item.productId?.sellingPrice ||
+                                  0)
+                              ).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="bg-gray-50 px-4 py-3 border-t flex justify-between">
+                      {order.status === "DELIVERED" && (
+                        <button
+                          onClick={() => generateInvoice(order)}
+                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Download Invoice
+                        </button>
+                      )}
+                      {(order.status === "PLACED" ||
+                        order.status === "PROCESSING") && (
+                        <button
+                          onClick={() => handleCancelOrder(order._id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                          Cancel Order
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="bg-gray-50 px-4 py-3 border-t flex justify-between">
-                    {order.status === "DELIVERED" && (
-                      <button
-                        onClick={() => generateInvoice(order)}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
-                        Download Invoice
-                      </button>
-                    )}
-                    {(order.status === "PLACED" || order.status === "PROCESSING") && (
-                      <button
-                        onClick={() => handleCancelOrder(order._id)}
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                      >
-                        Cancel Order
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {totalPages > 1 && (
@@ -346,14 +451,18 @@ const MyOrders = () => {
                       onClick={() => setCurrentPage(i + 1)}
                       disabled={loading}
                       className={`px-3 py-1 border rounded ${
-                        currentPage === i + 1 ? "bg-blue-100 border-blue-300" : ""
+                        currentPage === i + 1
+                          ? "bg-blue-100 border-blue-300"
+                          : ""
                       } ${loading ? "opacity-50" : ""}`}
                     >
                       {i + 1}
                     </button>
                   ))}
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages || loading}
                     className="px-3 py-1 border rounded disabled:opacity-50"
                   >

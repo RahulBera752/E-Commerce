@@ -15,6 +15,11 @@ function Login() {
   const [data, setData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
+  // 🔑 Forgot password states
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   useEffect(() => {
     if (user) {
       navigate("/");
@@ -50,10 +55,10 @@ function Login() {
       if (res.ok && resData.success) {
         toast.success("Login Successful!");
 
-        // ✅ Save JWT token to localStorage
+        // ✅ Save JWT token
         localStorage.setItem("token", resData.token);
 
-        // ✅ Save user details in Redux
+        // ✅ Save user in Redux
         dispatch(setUserDetails(resData.data));
 
         // ✅ Fetch user's cart
@@ -63,7 +68,7 @@ function Login() {
             method: SummaryApi.viewCartProduct.method,
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // 🔑 Attach JWT here
+              Authorization: `Bearer ${token}`,
             },
           });
 
@@ -90,6 +95,38 @@ function Login() {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ Forgot Password handler
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      const res = await fetch(SummaryApi.forgotPassword.url, {
+        method: SummaryApi.forgotPassword.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        toast.success(resData.message || "Password reset link sent to email");
+        setShowForgotModal(false);
+        setForgotEmail("");
+      } else {
+        toast.error(resData.message || "Failed to send reset link");
+      }
+    } catch (err) {
+      console.error("❌ Forgot password error:", err);
+      toast.error("Something went wrong, please try again.");
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -131,6 +168,13 @@ function Login() {
                   required
                   className="w-full border px-3 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e53935]"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-sm text-[#4a90e2] hover:underline mt-1"
+                >
+                  Forgot Password?
+                </button>
               </div>
 
               <button
@@ -154,6 +198,41 @@ function Login() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">Forgot Password</h3>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                className="w-full border px-3 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4a90e2]"
+              />
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="flex-1 bg-[#4a90e2] text-white py-2 rounded-md hover:bg-blue-600 transition disabled:opacity-50"
+                >
+                  {forgotLoading ? "Sending..." : "Send Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="flex-1 bg-gray-300 text-black py-2 rounded-md hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
