@@ -46,6 +46,9 @@ const AdminPanel = () => {
             <Link to="all-orders" className="px-3 py-2 hover:bg-slate-100 rounded">
               All Orders
             </Link>
+            <Link to="order-analytics" className="px-3 py-2 hover:bg-slate-100 rounded">
+              Order Analytics
+            </Link>
           </nav>
         </div>
       </aside>

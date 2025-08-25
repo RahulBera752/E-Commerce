@@ -15,10 +15,16 @@ const getallOrdersController = async (req, res) => {
 
         return {
           ...obj,
-          total: obj.total,                  // ✅ total before discount
-          discount: obj.discount,            // ✅ discount applied
-          finalAmount: obj.finalAmount,      // ✅ total after discount
-          coupon: obj.coupon || null,        // ✅ coupon details
+          grossTotal: obj.grossTotal ?? 0,
+          discount: obj.discount ?? 0,
+          finalAmount: obj.finalAmount ?? obj.grossTotal ?? 0,
+          coupon: obj.coupon
+            ? {
+                code: obj.coupon.code || null,
+                discountType: obj.coupon.discountType || null,
+                discountValue: obj.coupon.discountValue || 0,
+              }
+            : null, // ✅ now always structured
           probableDeliveryDate: obj.probableDeliveryDate || null,
         };
       }),

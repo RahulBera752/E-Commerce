@@ -94,7 +94,6 @@ const MyOrders = () => {
 
   const generateInvoice = (order) => {
     try {
-      // calculate totals if backend didn’t send
       const grossTotal = order.items.reduce(
         (acc, item) =>
           acc +
@@ -271,7 +270,6 @@ const MyOrders = () => {
           <>
             <div className="space-y-4">
               {orders.map((order) => {
-                // calculate totals dynamically
                 const grossTotal = order.items?.reduce(
                   (acc, item) =>
                     acc +
@@ -479,3 +477,4 @@ const MyOrders = () => {
 };
 
 export default MyOrders;
+

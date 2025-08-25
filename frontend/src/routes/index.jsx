@@ -18,6 +18,9 @@ import MyAccount from "../pages/MyAccount";
 import MyOrders from "../pages/MyOrders";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import OrderAnalytics from "../pages/OrderAnalytics";
+
+
 
 // 🆕 Footer pages
 import AboutUs from "../pages/AboutUs";
@@ -48,6 +51,7 @@ const router = createBrowserRouter([
           { path: "all-users", element: <AllUsers /> },
           { path: "all-products", element: <AllProducts /> },
           { path: "all-orders", element: <AllOrders /> },
+          { path: "order-analytics", element: <OrderAnalytics /> },
         ],
       },
       { path: "product-category/:category", element: <CategoryProduct /> },

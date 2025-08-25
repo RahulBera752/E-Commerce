@@ -105,7 +105,6 @@ const placeOrderController = async (req, res) => {
     session.endSession();
   }
 };
-
 // ================= MY ORDERS =================
 const getMyOrdersController = async (req, res) => {
   try {
@@ -129,12 +128,13 @@ const getMyOrdersController = async (req, res) => {
       Order.countDocuments({ user: userId }),
     ]);
 
-    // ✅ Ensure numbers always returned
+    // ✅ Ensure numbers & coupon always returned
     const formattedOrders = orders.map((order) => ({
       ...order.toObject(),
       grossTotal: order.grossTotal ?? 0,
       discount: order.discount ?? 0,
       finalAmount: order.finalAmount ?? order.grossTotal ?? 0,
+      coupon: order.coupon || null,
       items: order.items.map((item) => ({
         ...item.toObject(),
         productId: item.productId?._id || item.productId,

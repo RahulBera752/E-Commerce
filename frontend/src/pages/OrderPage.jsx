@@ -134,21 +134,17 @@ const Order = () => {
         quantity: item.quantity,
       }));
 
-      // ✅ Corrected payload (matches backend schema)
+      // ✅ Corrected payload (backend expects this)
       const payload = {
         name: user.name,
         phone: phone.trim(),
         address: `${address.trim()}, Landmark: ${landmark.trim()}, PIN: ${pinCode.trim()}`,
         items: orderItems,
         paymentMethod,
-        grossTotal: total,                   // ✅ backend expects grossTotal
-        discount: discount,                  // ✅ backend expects discount
-        finalAmount: total - discount,       // ✅ backend expects finalAmount
-        coupon: discount > 0 ? {
-          code: couponCode.toUpperCase(),
-          discountType: "FLAT",
-          discountValue: discount
-        } : null
+        total: total - discount,   // ✅ backend checks this against finalAmount
+        couponCode: discount > 0 ? couponCode.toUpperCase() : null,
+        discountType: discount > 0 ? "FLAT" : null,
+        discountValue: discount > 0 ? discount : 0,
       };
 
       if (paymentMethod === "COD") {
@@ -193,11 +189,11 @@ const Order = () => {
     const loaded = await loadRazorpayScript();
     if (!loaded) throw new Error("Failed to load Razorpay SDK");
 
-    // ✅ use finalAmount (discount applied)
+    // ✅ use total - discount (finalAmount)
     const orderRes = await fetch("http://localhost:8080/api/payment/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: orderPayload.finalAmount, currency: "INR" }),
+      body: JSON.stringify({ amount: orderPayload.total, currency: "INR" }),
     });
 
     const data = await orderRes.json();

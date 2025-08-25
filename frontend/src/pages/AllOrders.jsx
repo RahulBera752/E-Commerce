@@ -156,7 +156,7 @@ const AllOrders = () => {
                 <p className="pl-4 font-medium">
                   <b>Total:</b>{" "}
                   <span className={order.discount > 0 ? "line-through text-gray-500" : ""}>
-                    ₹{order.grossTotal || order.total}
+                    ₹{order.grossTotal}
                   </span>
                 </p>
               </div>
@@ -173,7 +173,12 @@ const AllOrders = () => {
                     }`}
                   ></span>
                   <p className="pl-4 font-medium text-green-700">
-                    <b>Discount:</b> -₹{order.discount} ({order.coupon?.code || "Coupon"})
+                    <b>Discount:</b> -₹{order.discount}{" "}
+                    {order.coupon?.code && (
+                      <span className="text-sm text-gray-600">
+                        (Coupon: {order.coupon.code})
+                      </span>
+                    )}
                   </p>
                 </div>
               )}
