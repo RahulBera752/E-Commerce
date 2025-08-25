@@ -1,4 +1,5 @@
 # 🛒 MERN Stack E-Commerce Project
+            GhoroaStore
 
 This is a **full-stack MERN (MongoDB, Express.js, React.js, Node.js) E-Commerce application** that simulates a real-world online store.  
 It provides both a **customer-facing experience** and an **admin dashboard** for management.  
