@@ -19,7 +19,7 @@ import { resetPasswordController } from "../controller/user/resetPassword.js";
 // Product Controllers
 import addProduct from "../controller/product/addProduct.js";
 import getCategoryProduct from "../controller/product/getCategoryProductOne.js";
-import getCategoryWiseProduct from "../controller/product/getCategorywiseProduct.js";
+import getCategoryWiseProduct from "../controller/product/getCategoryWiseProduct.js";
 import getAllProducts from "../controller/product/getProduct.js";
 import updateProduct from "../controller/product/updateProduct.js";
 
